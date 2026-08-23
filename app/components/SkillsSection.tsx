@@ -6,14 +6,7 @@ import { useScrambleHover } from "../hooks/useScrambleHover";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const SKILLS = [
-  "Python",
-  "JavaScript / TypeScript",
-  "Rust",
-  "C / C++",
-  "PyTorch",
-  "JAX",
-];
+const SKILLS = ["Python", "JavaScript / TypeScript", "Rust", "C / C++", "PyTorch", "JAX"];
 
 /**
  * Individual skill pill with Orbital Quantum Particle Halo.
@@ -135,7 +128,7 @@ function SkillPill({ label }: { label: string }) {
 }
 
 export function SkillsSection() {
-  const sectionRef  = useRef<HTMLElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const { ref: labelRef, onMouseEnter: onLabelHover } = useScrambleHover<HTMLSpanElement>("Languages & Tools");
   const floatTweens = useRef<gsap.core.Tween[]>([]);
 
@@ -166,9 +159,9 @@ export function SkillsSection() {
       );
 
       // Pills stagger in, then launch float loop once reveal finishes
-      const REVEAL_STAGGER  = 0.09;
+      const REVEAL_STAGGER = 0.09;
       const REVEAL_DURATION = 0.55;
-      const revealTotal     = (SKILLS.length - 1) * REVEAL_STAGGER + REVEAL_DURATION;
+      const revealTotal = (SKILLS.length - 1) * REVEAL_STAGGER + REVEAL_DURATION;
 
       gsap.fromTo(
         ".skill-pill",
@@ -213,10 +206,7 @@ export function SkillsSection() {
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      style={{ padding: "clamp(80px, 12vw, 160px) clamp(24px, 6vw, 120px)" }}
-    >
+    <section ref={sectionRef} style={{ padding: "clamp(80px, 12vw, 160px) clamp(24px, 6vw, 120px)" }}>
       {/* Eyebrow label */}
       <span
         ref={labelRef}

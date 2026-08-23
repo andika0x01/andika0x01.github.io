@@ -48,7 +48,7 @@ export function useSmoothScroll() {
 
       // Clamp max skew to ±1.5 degrees to keep it elegant and readable
       const clampedSkew = Math.max(-1.5, Math.min(1.5, velocity * 0.04));
-      
+
       const elements = skewElements();
       if (elements.length > 0) {
         gsap.set(elements, {

@@ -236,12 +236,8 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
         className="hidden md:flex flex-col gap-1"
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ color: "var(--muted)", fontSize: "10px" }}>
-            [0x0{activeProject ? activeProject.index + 1 : 1}]
-          </span>
-          <span style={{ fontWeight: 600 }}>
-            {activeProject?.project.name}
-          </span>
+          <span style={{ color: "var(--muted)", fontSize: "10px" }}>[0x0{activeProject ? activeProject.index + 1 : 1}]</span>
+          <span style={{ fontWeight: 600 }}>{activeProject?.project.name}</span>
           <span style={{ fontSize: "10px", color: "var(--muted)" }}>↗</span>
         </div>
         {activeProject?.project.language && (
@@ -351,9 +347,7 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
                     {project.language}
                   </>
                 )}
-                {project.stars > 0 && (
-                  <span style={{ opacity: 0.6 }}>· ★ {project.stars}</span>
-                )}
+                {project.stars > 0 && <span style={{ opacity: 0.6 }}>· ★ {project.stars}</span>}
               </span>
             </div>
 

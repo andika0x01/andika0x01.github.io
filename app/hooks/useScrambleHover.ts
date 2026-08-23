@@ -11,10 +11,7 @@ interface UseScrambleHoverOptions {
  * Hook for clean alphanumeric/hex typography hover animation.
  * Scrambles characters cleanly with hex digits before resolving smoothly.
  */
-export function useScrambleHover<T extends HTMLElement>(
-  originalText?: string,
-  options: UseScrambleHoverOptions = {}
-) {
+export function useScrambleHover<T extends HTMLElement>(originalText?: string, options: UseScrambleHoverOptions = {}) {
   const ref = useRef<T>(null);
   const animFrameRef = useRef<number | null>(null);
   const duration = (options.duration ?? 0.28) * 1000;

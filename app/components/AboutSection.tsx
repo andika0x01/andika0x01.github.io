@@ -68,7 +68,7 @@ function WordSplit({ text }: { text: string }) {
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const { ref: labelRef, onMouseEnter: onLabelHover } = useScrambleHover<HTMLSpanElement>("About");
-  const paraRefs   = useRef<(HTMLParagraphElement | null)[]>([]);
+  const paraRefs = useRef<(HTMLParagraphElement | null)[]>([]);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -214,16 +214,15 @@ export function AboutSection() {
         {PARAGRAPHS.map((para, i) => (
           <p
             key={i}
-            ref={(el) => { paraRefs.current[i] = el; }}
+            ref={(el) => {
+              paraRefs.current[i] = el;
+            }}
             style={{
               fontSize: para.size,
               fontWeight: para.weight,
               lineHeight: 1.62,
               color: para.muted ? "var(--muted)" : "var(--ink)",
-              marginBottom:
-                i === PARAGRAPHS.length - 1
-                  ? 0
-                  : "clamp(1.5rem, 2.5vw, 2.5rem)",
+              marginBottom: i === PARAGRAPHS.length - 1 ? 0 : "clamp(1.5rem, 2.5vw, 2.5rem)",
             }}
           >
             <WordSplit text={para.text} />

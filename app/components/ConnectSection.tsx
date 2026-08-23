@@ -30,20 +30,12 @@ const LINKS = [
  * Hover:  display text fades to 45% opacity + underline draws left → right + arrow loops
  * Leave:  text returns to full opacity + underline erases right → left
  */
-function ConnectLink({
-  label,
-  href,
-  display,
-}: {
-  label: string;
-  href: string;
-  display: string;
-}) {
-  const ref          = useMagneticHover<HTMLAnchorElement>(0.22);
-  const displayRef   = useRef<HTMLSpanElement>(null);
+function ConnectLink({ label, href, display }: { label: string; href: string; display: string }) {
+  const ref = useMagneticHover<HTMLAnchorElement>(0.22);
+  const displayRef = useRef<HTMLSpanElement>(null);
   const underlineRef = useRef<HTMLDivElement>(null);
-  const arrow1Ref    = useRef<HTMLSpanElement>(null);
-  const arrow2Ref    = useRef<HTMLSpanElement>(null);
+  const arrow1Ref = useRef<HTMLSpanElement>(null);
+  const arrow2Ref = useRef<HTMLSpanElement>(null);
   const { ref: labelSpanRef, trigger: triggerLabelScramble } = useScrambleHover<HTMLSpanElement>(label, { duration: 0.28 });
 
   const onEnter = () => {
@@ -241,7 +233,7 @@ function ConnectLink({
 export function ConnectSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const { ref: labelRef, onMouseEnter: onLabelHover } = useScrambleHover<HTMLSpanElement>("Connect");
-  const footerRef  = useRef<HTMLParagraphElement>(null);
+  const footerRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

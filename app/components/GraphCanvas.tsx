@@ -42,22 +42,43 @@ for (let i = 0; i < TESSERACT_VERTICES.length; i++) {
 
 // ── 3D Octahedron Geometry (6 vertices, 12 edges) ───────────────────
 const OCTAHEDRON_VERTICES: [number, number, number][] = [
-  [1, 0, 0], [-1, 0, 0],
-  [0, 1, 0], [0, -1, 0],
-  [0, 0, 1], [0, 0, -1],
+  [1, 0, 0],
+  [-1, 0, 0],
+  [0, 1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1],
 ];
 const OCTAHEDRON_EDGES: [number, number][] = [
-  [0, 2], [0, 3], [0, 4], [0, 5],
-  [1, 2], [1, 3], [1, 4], [1, 5],
-  [2, 4], [4, 3], [3, 5], [5, 2],
+  [0, 2],
+  [0, 3],
+  [0, 4],
+  [0, 5],
+  [1, 2],
+  [1, 3],
+  [1, 4],
+  [1, 5],
+  [2, 4],
+  [4, 3],
+  [3, 5],
+  [5, 2],
 ];
 
 // ── 3D Icosahedron Geometry (12 vertices, 30 edges) ─────────────────
 const PHI = (1 + Math.sqrt(5)) / 2;
 const ICOSAHEDRON_VERTICES: [number, number, number][] = [
-  [-1, PHI, 0], [1, PHI, 0], [-1, -PHI, 0], [1, -PHI, 0],
-  [0, -1, PHI], [0, 1, PHI], [0, -1, -PHI], [0, 1, -PHI],
-  [PHI, 0, -1], [PHI, 0, 1], [-PHI, 0, -1], [-PHI, 0, 1],
+  [-1, PHI, 0],
+  [1, PHI, 0],
+  [-1, -PHI, 0],
+  [1, -PHI, 0],
+  [0, -1, PHI],
+  [0, 1, PHI],
+  [0, -1, -PHI],
+  [0, 1, -PHI],
+  [PHI, 0, -1],
+  [PHI, 0, 1],
+  [-PHI, 0, -1],
+  [-PHI, 0, 1],
 ];
 const ICOSAHEDRON_EDGES: [number, number][] = [];
 for (let i = 0; i < ICOSAHEDRON_VERTICES.length; i++) {
@@ -76,7 +97,7 @@ for (let i = 0; i < ICOSAHEDRON_VERTICES.length; i++) {
  * 1. 4D Tesseract & 3D Wireframe Polyhedra (Octahedron, Icosahedron)
  * 2. Delaunay-style Triangular Geometric Mesh
  * 3. Continuous Fluid Cursor Spline Trail
- * 
+ *
  * 100% Monochromatic & Clean - Zero text/code symbol noise.
  */
 export function GraphCanvas() {
@@ -208,9 +229,9 @@ export function GraphCanvas() {
         const z2 = x1 * sinXZ + z1 * cosXZ;
 
         const scale4 = 1 / (2.4 - w1 * 0.6);
-        const scale3 = 1 / (2.6 - (z2 * scale4) * 0.5);
-        const px = tesseractCenterX + (x2 * scale4) * scale3 * tesseractScale;
-        const py = tesseractCenterY + (y1 * scale4) * scale3 * tesseractScale;
+        const scale3 = 1 / (2.6 - z2 * scale4 * 0.5);
+        const px = tesseractCenterX + x2 * scale4 * scale3 * tesseractScale;
+        const py = tesseractCenterY + y1 * scale4 * scale3 * tesseractScale;
 
         projectedTesseract.push([px, py]);
       }

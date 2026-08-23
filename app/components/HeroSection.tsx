@@ -21,7 +21,7 @@ function PluckableScrollLine({ lineRef }: { lineRef: React.RefObject<SVGSVGEleme
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseLocalX = e.clientX - rect.left;
     const clampedX = Math.max(0, Math.min(24, mouseLocalX));
-    
+
     gsap.killTweensOf(cxState.current);
     cxState.current.cx = clampedX;
     if (pathRef.current) {
@@ -58,22 +58,16 @@ function PluckableScrollLine({ lineRef }: { lineRef: React.RefObject<SVGSVGEleme
         marginLeft: "-6px",
       }}
     >
-      <path
-        ref={pathRef}
-        d="M 12 0 Q 12 22 12 44"
-        fill="none"
-        stroke="var(--muted)"
-        strokeWidth="1"
-      />
+      <path ref={pathRef} d="M 12 0 Q 12 22 12 44" fill="none" stroke="var(--muted)" strokeWidth="1" />
     </svg>
   );
 }
 
 export function HeroSection() {
-  const sectionRef    = useRef<HTMLElement>(null);
-  const nameBlockRef  = useRef<HTMLDivElement>(null);
-  const taglineRef    = useRef<HTMLParagraphElement>(null);
-  const metaRef       = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const nameBlockRef = useRef<HTMLDivElement>(null);
+  const taglineRef = useRef<HTMLParagraphElement>(null);
+  const metaRef = useRef<HTMLDivElement>(null);
   const scrollLineRef = useRef<SVGSVGElement>(null);
   const scrollTextRef = useRef<HTMLSpanElement>(null);
 
@@ -84,66 +78,47 @@ export function HeroSection() {
       // ── Reduced-motion fallback: show everything immediately ──────────
       if (reduced) {
         gsap.set(".char", { opacity: 1 });
-        gsap.set(
-          [taglineRef.current, metaRef.current, scrollLineRef.current, scrollTextRef.current],
-          { opacity: 1, y: 0, scaleY: 1 }
-        );
+        gsap.set([taglineRef.current, metaRef.current, scrollLineRef.current, scrollTextRef.current], { opacity: 1, y: 0, scaleY: 1 });
         return;
       }
 
       // ── Scramble effect on name chars ─────────────────────────────────
       const charEls = sectionRef.current?.querySelectorAll(".char");
-      const STAGGER   = 0.08;
-      const SCRAMBLE  = 0.65;
+      const STAGGER = 0.08;
+      const SCRAMBLE = 0.65;
       const totalTime = (ALL_CHARS.length - 1) * STAGGER + SCRAMBLE;
 
       charEls?.forEach((el, i) => {
         const finalChar = ALL_CHARS[i];
-        const delay     = i * STAGGER;
+        const delay = i * STAGGER;
 
         gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.03, delay, ease: "none" });
 
-        gsap.to({}, {
-          duration: SCRAMBLE,
-          delay,
-          onUpdate() {
-            const p = this.progress();
-            (el as HTMLElement).textContent =
-              p < 0.78
-                ? ALPHA[Math.floor(Math.random() * ALPHA.length)]
-                : finalChar;
-          },
-          onComplete: () => {
-            (el as HTMLElement).textContent = finalChar;
-          },
-        });
+        gsap.to(
+          {},
+          {
+            duration: SCRAMBLE,
+            delay,
+            onUpdate() {
+              const p = this.progress();
+              (el as HTMLElement).textContent = p < 0.78 ? ALPHA[Math.floor(Math.random() * ALPHA.length)] : finalChar;
+            },
+            onComplete: () => {
+              (el as HTMLElement).textContent = finalChar;
+            },
+          }
+        );
       });
 
       // ── Tagline — slides in after scramble finishes ───────────────────
-      gsap.fromTo(
-        taglineRef.current,
-        { y: 28, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.75, ease: "power3.out", delay: totalTime }
-      );
+      gsap.fromTo(taglineRef.current, { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, ease: "power3.out", delay: totalTime });
 
       // ── Meta ──────────────────────────────────────────────────────────
-      gsap.fromTo(
-        metaRef.current,
-        { y: 16, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.55, ease: "power3.out", delay: totalTime + 0.22 }
-      );
+      gsap.fromTo(metaRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out", delay: totalTime + 0.22 });
 
       // ── Scroll indicator: line draws down, then text appears ──────────
-      gsap.fromTo(
-        scrollLineRef.current,
-        { scaleY: 0, transformOrigin: "top center" },
-        { scaleY: 1, duration: 0.85, ease: "power2.inOut", delay: totalTime + 0.42 }
-      );
-      gsap.fromTo(
-        scrollTextRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.4, delay: totalTime + 1.15 }
-      );
+      gsap.fromTo(scrollLineRef.current, { scaleY: 0, transformOrigin: "top center" }, { scaleY: 1, duration: 0.85, ease: "power2.inOut", delay: totalTime + 0.42 });
+      gsap.fromTo(scrollTextRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4, delay: totalTime + 1.15 });
 
       // ── Subtle breathing on name block after reveal ───────────────────
       gsap.to(nameBlockRef.current, {
@@ -202,11 +177,7 @@ export function HeroSection() {
 
   /** Render a word as individual scramble-able char spans */
   const renderWord = (word: string, className: string, ariaLabel: string) => (
-    <div
-      className={className}
-      aria-label={ariaLabel}
-      style={{ lineHeight: 0.88 }}
-    >
+    <div className={className} aria-label={ariaLabel} style={{ lineHeight: 0.88 }}>
       {word.split("").map((char, i) => (
         <span
           key={i}
@@ -248,11 +219,7 @@ export function HeroSection() {
       }}
     >
       {/* ── Name block (receives scroll parallax & kinetic velocity skew) ── */}
-      <div
-        ref={nameBlockRef}
-        data-velocity-skew
-        style={{ position: "relative", zIndex: 1, willChange: "transform" }}
-      >
+      <div ref={nameBlockRef} data-velocity-skew style={{ position: "relative", zIndex: 1, willChange: "transform" }}>
         {renderWord("ANDIKA", "firstname", "ANDIKA")}
         {renderWord("DINATA", "lastname", "DINATA")}
       </div>
@@ -273,8 +240,7 @@ export function HeroSection() {
         }}
       >
         I write code to think.
-        <br />
-        I think to write better code.
+        <br />I think to write better code.
       </p>
 
       {/* ── Meta ────────────────────────────────────────── */}

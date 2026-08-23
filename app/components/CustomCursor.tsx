@@ -16,11 +16,7 @@ export function CustomCursor() {
 
   useEffect(() => {
     // Only on real pointer devices
-    if (
-      window.matchMedia("(hover: none)").matches ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    )
-      return;
+    if (window.matchMedia("(hover: none)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ring = ringRef.current;
     const dot = dotRef.current;
@@ -78,9 +74,7 @@ export function CustomCursor() {
         ease: "power2.out",
       });
 
-    const interactives = document.querySelectorAll(
-      "a, button, [data-magnetic], .skill-pill, .char"
-    );
+    const interactives = document.querySelectorAll("a, button, [data-magnetic], .skill-pill, .char");
     interactives.forEach((el) => {
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);

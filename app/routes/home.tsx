@@ -25,8 +25,7 @@ export function meta(): ReturnType<Route.MetaFunction> {
     { title: "Andika Dinata" },
     {
       name: "description",
-      content:
-        "Software engineer and CS student at Sumatera Institute of Technology. Interested in theoretical computer science and cybersecurity.",
+      content: "Software engineer and CS student at Sumatera Institute of Technology. Interested in theoretical computer science and cybersecurity.",
     },
   ];
 }

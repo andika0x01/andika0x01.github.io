@@ -26,8 +26,7 @@ export function SystemHUD() {
 
       requestAnimationFrame(() => {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        const scrollHeight =
-          document.documentElement.scrollHeight - window.innerHeight;
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
         const progress = scrollHeight > 0 ? Math.min(1, Math.max(0, scrollTop / scrollHeight)) : 0;
         setScrollProgress(progress);
 

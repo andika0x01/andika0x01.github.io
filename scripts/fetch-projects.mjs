@@ -7,9 +7,7 @@ async function fetchProjects() {
       Accept: "application/vnd.github.v3+json",
     };
 
-    const token =
-      process.env.PERSONAL_ACCESS_TOKEN ||
-      process.env.GITHUB_TOKEN;
+    const token = process.env.PERSONAL_ACCESS_TOKEN || process.env.GITHUB_TOKEN;
 
     if (token && token.trim() !== "") {
       headers["Authorization"] = `Bearer ${token.trim()}`;
@@ -19,10 +17,7 @@ async function fetchProjects() {
     let page = 1;
 
     while (true) {
-      const res = await fetch(
-        `https://api.github.com/users/andika0x01/repos?type=public&sort=pushed&per_page=100&page=${page}`,
-        { headers }
-      );
+      const res = await fetch(`https://api.github.com/users/andika0x01/repos?type=public&sort=pushed&per_page=100&page=${page}`, { headers });
 
       if (!res.ok) {
         throw new Error(`GitHub API returned status ${res.status}: ${res.statusText}`);
@@ -50,11 +45,7 @@ async function fetchProjects() {
         stars: r.stargazers_count,
       }));
 
-    writeFileSync(
-      "public/projects.json",
-      JSON.stringify(projects, null, 2),
-      "utf-8"
-    );
+    writeFileSync("public/projects.json", JSON.stringify(projects, null, 2), "utf-8");
     console.log(`Successfully written ${projects.length} projects to public/projects.json:`);
     console.log(projects.map((p) => p.name).join(", "));
   } catch (err) {
@@ -63,4 +54,3 @@ async function fetchProjects() {
 }
 
 fetchProjects();
-
