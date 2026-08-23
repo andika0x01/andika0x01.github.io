@@ -22,6 +22,19 @@ const LANG_COLORS: Record<string, string> = {
   Go: "#00ADD8",
   Java: "#b07219",
   Shell: "#89e051",
+  "Jupyter Notebook": "#DA5B0B",
+  Astro: "#ff5a03",
+  HTML: "#e34c26",
+  CSS: "#563d7c",
+  Vue: "#41b883",
+  PHP: "#4F5D95",
+  Kotlin: "#A97BFF",
+  Swift: "#F05138",
+  Ruby: "#701516",
+  Dart: "#00B4AB",
+  Lua: "#000080",
+  Zig: "#ec915c",
+  "C#": "#178600",
 };
 
 function langColor(lang: string | null) {
@@ -60,22 +73,24 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
         }
       );
 
-      gsap.fromTo(
-        ".project-row",
-        { x: -24, opacity: 0 },
-        {
-          x: 0,
-          opacity: 1,
-          stagger: { each: 0.1, from: "start" },
-          duration: 0.65,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 82%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
+      const rows = sectionRef.current?.querySelectorAll(".project-row");
+      rows?.forEach((row) => {
+        gsap.fromTo(
+          row,
+          { x: -24, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.55,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: row,
+              start: "top 88%",
+              toggleActions: "play none none none",
+            },
+          }
+        );
+      });
     }, sectionRef);
 
     return () => ctx.revert();
@@ -106,7 +121,7 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
           opacity: 0,
         }}
       >
-        Selected Work
+        Projects
       </span>
 
       {/* Project list */}

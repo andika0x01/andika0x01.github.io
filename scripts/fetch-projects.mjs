@@ -15,20 +15,33 @@ async function fetchProjects() {
       headers["Authorization"] = `Bearer ${token.trim()}`;
     }
 
-    const res = await fetch(
-      "https://api.github.com/users/andika0x01/repos?type=public&sort=pushed&per_page=30",
-      { headers }
-    );
+    const allRepos = [];
+    let page = 1;
 
-    if (!res.ok) {
-      throw new Error(`GitHub API returned status ${res.status}: ${res.statusText}`);
+    while (true) {
+      const res = await fetch(
+        `https://api.github.com/users/andika0x01/repos?type=public&sort=pushed&per_page=100&page=${page}`,
+        { headers }
+      );
+
+      if (!res.ok) {
+        throw new Error(`GitHub API returned status ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        break;
+      }
+
+      allRepos.push(...data);
+      if (data.length < 100) {
+        break;
+      }
+      page++;
     }
 
-    const data = await res.json();
-
-    const projects = data
-      .filter((r) => !r.fork && !r.archived && r.name.toLowerCase() !== "andika0x01")
-      .slice(0, 8)
+    const projects = allRepos
+      .filter((r) => !r.fork && r.name.toLowerCase() !== "andika0x01")
       .map((r) => ({
         name: r.name,
         description: r.description,
@@ -50,3 +63,4 @@ async function fetchProjects() {
 }
 
 fetchProjects();
+
