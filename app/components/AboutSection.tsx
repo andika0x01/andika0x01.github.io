@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useScrambleHover } from "../hooks/useScrambleHover";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -48,7 +49,13 @@ function WordSplit({ text }: { text: string }) {
             verticalAlign: "bottom",
           }}
         >
-          <span className="word-inner" style={{ display: "inline-block" }}>
+          <span
+            className="word-inner proximity-word"
+            style={{
+              display: "inline-block",
+              transition: "letter-spacing 0.2s ease, opacity 0.2s ease",
+            }}
+          >
             {word}
             {i < words.length - 1 ? "\u00A0" : ""}
           </span>
@@ -60,7 +67,7 @@ function WordSplit({ text }: { text: string }) {
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const labelRef   = useRef<HTMLSpanElement>(null);
+  const { ref: labelRef, onMouseEnter: onLabelHover } = useScrambleHover<HTMLSpanElement>("About");
   const paraRefs   = useRef<(HTMLParagraphElement | null)[]>([]);
 
   useEffect(() => {
@@ -112,7 +119,66 @@ export function AboutSection() {
       });
     }, sectionRef);
 
-    return () => ctx.revert();
+    // ── Typographic Proximity Optical Lens ─────────────────────────
+    const section = sectionRef.current;
+    if (!section || reduced || window.matchMedia("(hover: none)").matches) {
+      return () => ctx.revert();
+    }
+
+    const words = section.querySelectorAll<HTMLElement>(".proximity-word");
+    let mouseX = -9999;
+    let mouseY = -9999;
+    let animId: number;
+
+    const onMouseMove = (e: MouseEvent) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+
+    const onMouseLeave = () => {
+      mouseX = -9999;
+      mouseY = -9999;
+    };
+
+    const updateProximity = () => {
+      if (mouseX !== -9999) {
+        const radius = 120;
+        words.forEach((word) => {
+          const rect = word.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dist = Math.hypot(mouseX - cx, mouseY - cy);
+
+          if (dist < radius) {
+            const p = Math.pow(1 - dist / radius, 1.6);
+            word.style.letterSpacing = `${(p * 0.025).toFixed(4)}em`;
+            word.style.transform = `translateY(${(-p * 1.5).toFixed(2)}px)`;
+          } else if (word.style.letterSpacing !== "") {
+            word.style.letterSpacing = "";
+            word.style.transform = "";
+          }
+        });
+      } else {
+        words.forEach((word) => {
+          if (word.style.letterSpacing !== "") {
+            word.style.letterSpacing = "";
+            word.style.transform = "";
+          }
+        });
+      }
+      animId = requestAnimationFrame(updateProximity);
+    };
+
+    section.addEventListener("mousemove", onMouseMove);
+    section.addEventListener("mouseleave", onMouseLeave);
+    animId = requestAnimationFrame(updateProximity);
+
+    return () => {
+      ctx.revert();
+      section.removeEventListener("mousemove", onMouseMove);
+      section.removeEventListener("mouseleave", onMouseLeave);
+      cancelAnimationFrame(animId);
+    };
   }, []);
 
   return (
@@ -126,8 +192,10 @@ export function AboutSection() {
       {/* Eyebrow label */}
       <span
         ref={labelRef}
+        onMouseEnter={onLabelHover}
         style={{
-          display: "block",
+          display: "inline-block",
+          cursor: "default",
           fontFamily: "'Geist Mono', ui-monospace, monospace",
           fontSize: "11px",
           fontWeight: 500,
@@ -142,24 +210,26 @@ export function AboutSection() {
       </span>
 
       {/* Paragraphs — each word clips in from below on scroll */}
-      {PARAGRAPHS.map((para, i) => (
-        <p
-          key={i}
-          ref={(el) => { paraRefs.current[i] = el; }}
-          style={{
-            fontSize: para.size,
-            fontWeight: para.weight,
-            lineHeight: 1.62,
-            color: para.muted ? "var(--muted)" : "var(--ink)",
-            marginBottom:
-              i === PARAGRAPHS.length - 1
-                ? 0
-                : "clamp(1.5rem, 2.5vw, 2.5rem)",
-          }}
-        >
-          <WordSplit text={para.text} />
-        </p>
-      ))}
+      <div data-velocity-skew style={{ willChange: "transform" }}>
+        {PARAGRAPHS.map((para, i) => (
+          <p
+            key={i}
+            ref={(el) => { paraRefs.current[i] = el; }}
+            style={{
+              fontSize: para.size,
+              fontWeight: para.weight,
+              lineHeight: 1.62,
+              color: para.muted ? "var(--muted)" : "var(--ink)",
+              marginBottom:
+                i === PARAGRAPHS.length - 1
+                  ? 0
+                  : "clamp(1.5rem, 2.5vw, 2.5rem)",
+            }}
+          >
+            <WordSplit text={para.text} />
+          </p>
+        ))}
+      </div>
     </section>
   );
 }

@@ -62,13 +62,18 @@ body {
   background: var(--ghost);
 }
 
-/* ── Project rows ──────────────────────────────── */
-.project-row {
-  transition: opacity 0.15s ease;
+@keyframes spin-orbit {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 64;
+  }
 }
 
-.project-row:hover {
-  opacity: 0.65;
+/* ── Project rows ──────────────────────────────── */
+.project-row {
+  position: relative;
 }
 
 /* ── Connect links ─────────────────────────────── */

@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useScrambleHover } from "../hooks/useScrambleHover";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -44,7 +45,10 @@ function langColor(lang: string | null) {
 
 export function ProjectsSection({ projects }: { projects: Project[] }) {
   const sectionRef = useRef<HTMLElement>(null);
-  const labelRef   = useRef<HTMLSpanElement>(null);
+  const { ref: labelRef, onMouseEnter: onLabelHover } = useScrambleHover<HTMLSpanElement>("Projects");
+  const inspectorRef = useRef<HTMLDivElement>(null);
+  const [activeProject, setActiveProject] = useState<{ project: Project; index: number } | null>(null);
+  const leaveTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!projects.length) return;
@@ -54,6 +58,7 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
     const ctx = gsap.context(() => {
       if (reduced) {
         gsap.set([labelRef.current, ".project-row"], { opacity: 1, x: 0 });
+        gsap.set(".project-divider", { scaleX: 1 });
         return;
       }
 
@@ -75,6 +80,9 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
 
       const rows = sectionRef.current?.querySelectorAll(".project-row");
       rows?.forEach((row) => {
+        const divider = row.querySelector(".project-divider");
+
+        // Row slide-in
         gsap.fromTo(
           row,
           { x: -24, opacity: 0 },
@@ -90,11 +98,107 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
             },
           }
         );
+
+        // Kinetic line-draw on divider
+        if (divider) {
+          gsap.fromTo(
+            divider,
+            { scaleX: 0, transformOrigin: "left center" },
+            {
+              scaleX: 1,
+              duration: 0.7,
+              ease: "power2.inOut",
+              scrollTrigger: {
+                trigger: row,
+                start: "top 88%",
+                toggleActions: "play none none none",
+              },
+            }
+          );
+        }
       });
     }, sectionRef);
 
     return () => ctx.revert();
   }, [projects]);
+
+  // Floating inspector cursor tracking
+  useEffect(() => {
+    if (!inspectorRef.current || window.matchMedia("(hover: none)").matches) return;
+
+    const el = inspectorRef.current;
+    const setX = gsap.quickTo(el, "x", { duration: 0.2, ease: "power3.out" });
+    const setY = gsap.quickTo(el, "y", { duration: 0.2, ease: "power3.out" });
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setX(e.clientX + 16);
+      setY(e.clientY + 16);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  const handleRowEnter = (project: Project, index: number) => {
+    // Clear any pending leave timeout
+    if (leaveTimerRef.current !== null) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+
+    setActiveProject({ project, index });
+
+    const rows = sectionRef.current?.querySelectorAll<HTMLElement>(".project-row");
+    rows?.forEach((row, i) => {
+      const divider = row.querySelector<HTMLElement>(".project-divider");
+      if (i === index) {
+        gsap.to(row, { opacity: 1, x: 8, duration: 0.22, ease: "power2.out", overwrite: "auto" });
+        if (divider) gsap.to(divider, { opacity: 1, background: "rgba(10,10,10,0.22)", duration: 0.22, overwrite: "auto" });
+      } else {
+        gsap.to(row, { opacity: 0.28, x: 0, duration: 0.22, ease: "power2.out", overwrite: "auto" });
+        if (divider) gsap.to(divider, { opacity: 0.3, background: "rgba(10,10,10,0.06)", duration: 0.22, overwrite: "auto" });
+      }
+    });
+
+    if (inspectorRef.current) {
+      gsap.to(inspectorRef.current, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.18,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    }
+  };
+
+  const handleRowLeave = () => {
+    if (leaveTimerRef.current !== null) {
+      clearTimeout(leaveTimerRef.current);
+    }
+
+    // Debounce leave slightly to avoid glitching when jumping between rows
+    leaveTimerRef.current = window.setTimeout(() => {
+      setActiveProject(null);
+
+      const rows = sectionRef.current?.querySelectorAll<HTMLElement>(".project-row");
+      rows?.forEach((row) => {
+        const divider = row.querySelector<HTMLElement>(".project-divider");
+        gsap.to(row, { opacity: 1, x: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+        if (divider) gsap.to(divider, { opacity: 1, background: "rgba(10,10,10,0.08)", duration: 0.3, overwrite: "auto" });
+      });
+
+      if (inspectorRef.current) {
+        gsap.to(inspectorRef.current, {
+          opacity: 0,
+          scale: 0.95,
+          duration: 0.18,
+          ease: "power2.in",
+          overwrite: "auto",
+        });
+      }
+      leaveTimerRef.current = null;
+    }, 20);
+  };
 
   if (!projects.length) return null;
 
@@ -104,13 +208,66 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
       style={{
         padding: "clamp(80px, 12vw, 160px) clamp(24px, 6vw, 120px)",
         maxWidth: "min(900px, 100%)",
+        position: "relative",
       }}
     >
+      {/* Floating Inspector HUD (Follows cursor) */}
+      <div
+        ref={inspectorRef}
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          pointerEvents: "none",
+          zIndex: 9990,
+          opacity: 0,
+          transform: "scale(0.95)",
+          padding: "8px 14px",
+          background: "rgba(255, 255, 255, 0.92)",
+          backdropFilter: "blur(8px)",
+          border: "1px solid rgba(10, 10, 10, 0.12)",
+          borderRadius: "3px",
+          fontFamily: "'Geist Mono', ui-monospace, monospace",
+          fontSize: "11px",
+          color: "var(--ink)",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.06)",
+        }}
+        className="hidden md:flex flex-col gap-1"
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ color: "var(--muted)", fontSize: "10px" }}>
+            [0x0{activeProject ? activeProject.index + 1 : 1}]
+          </span>
+          <span style={{ fontWeight: 600 }}>
+            {activeProject?.project.name}
+          </span>
+          <span style={{ fontSize: "10px", color: "var(--muted)" }}>↗</span>
+        </div>
+        {activeProject?.project.language && (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "var(--muted)" }}>
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: langColor(activeProject.project.language),
+                display: "inline-block",
+              }}
+            />
+            <span>{activeProject.project.language}</span>
+            {activeProject.project.stars > 0 && <span>· ★ {activeProject.project.stars}</span>}
+          </div>
+        )}
+      </div>
+
       {/* Eyebrow label */}
       <span
         ref={labelRef}
+        onMouseEnter={onLabelHover}
         style={{
-          display: "block",
+          display: "inline-block",
+          cursor: "default",
           fontFamily: "'Geist Mono', ui-monospace, monospace",
           fontSize: "11px",
           fontWeight: 500,
@@ -133,14 +290,13 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
             target="_blank"
             rel="noopener noreferrer"
             className="project-row"
+            onMouseEnter={() => handleRowEnter(project, i)}
+            onMouseLeave={handleRowLeave}
             style={{
               display: "block",
+              position: "relative",
               paddingTop: i === 0 ? 0 : "clamp(1.25rem, 2.5vw, 2.25rem)",
               paddingBottom: "clamp(1.25rem, 2.5vw, 2.25rem)",
-              borderBottom:
-                i === projects.length - 1
-                  ? "none"
-                  : "1px solid rgba(10,10,10,0.07)",
               textDecoration: "none",
               color: "inherit",
               opacity: 0,
@@ -213,6 +369,25 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
               >
                 {project.description}
               </p>
+            )}
+
+            {/* Kinetic Scroll-Triggered Line Draw Divider */}
+            {i !== projects.length - 1 && (
+              <div
+                className="project-divider"
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: "1px",
+                  background: "rgba(10, 10, 10, 0.08)",
+                  transform: "scaleX(0)",
+                  transformOrigin: "left center",
+                  transition: "background 0.2s ease, opacity 0.2s ease",
+                }}
+              />
             )}
           </a>
         ))}

@@ -5,12 +5,14 @@ import gsap from "gsap";
  * Two-layer custom cursor:
  *   · A small solid dot that follows the mouse instantly
  *   · A larger ring that lags behind (lerp 0.1)
+ *   · Concentric tactile shockwave wave ripple on click
  *
  * Only active on devices with a real pointer (hover: hover).
  */
 export function CustomCursor() {
   const ringRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
+  const shockwaveContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Only on real pointer devices
@@ -77,15 +79,52 @@ export function CustomCursor() {
       });
 
     const interactives = document.querySelectorAll(
-      "a, button, [data-magnetic], .skill-pill"
+      "a, button, [data-magnetic], .skill-pill, .char"
     );
     interactives.forEach((el) => {
       el.addEventListener("mouseenter", onEnter);
       el.addEventListener("mouseleave", onLeave);
     });
 
+    // Concentric Shockwave Click Waveform
+    const onPointerDown = (e: PointerEvent) => {
+      const container = shockwaveContainerRef.current;
+      if (!container) return;
+
+      const ripple = document.createElement("div");
+      ripple.style.position = "fixed";
+      ripple.style.left = `${e.clientX - 20}px`;
+      ripple.style.top = `${e.clientY - 20}px`;
+      ripple.style.width = "40px";
+      ripple.style.height = "40px";
+      ripple.style.borderRadius = "50%";
+      ripple.style.border = "1px solid rgba(10, 10, 10, 0.4)";
+      ripple.style.pointerEvents = "none";
+      ripple.style.zIndex = "9997";
+      ripple.style.willChange = "transform, opacity";
+
+      container.appendChild(ripple);
+
+      gsap.fromTo(
+        ripple,
+        { scale: 0.2, opacity: 0.6 },
+        {
+          scale: 2.2,
+          opacity: 0,
+          duration: 0.45,
+          ease: "power2.out",
+          onComplete: () => {
+            ripple.remove();
+          },
+        }
+      );
+    };
+
+    window.addEventListener("pointerdown", onPointerDown);
+
     return () => {
       window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("pointerdown", onPointerDown);
       gsap.ticker.remove(tick);
       interactives.forEach((el) => {
         el.removeEventListener("mouseenter", onEnter);
@@ -96,6 +135,7 @@ export function CustomCursor() {
 
   return (
     <>
+      <div ref={shockwaveContainerRef} aria-hidden="true" />
       {/* Lagging ring */}
       <div
         ref={ringRef}

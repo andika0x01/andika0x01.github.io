@@ -1,5 +1,19 @@
 [
   {
+    "name": "ai-gateway",
+    "description": null,
+    "url": "https://github.com/andika0x01/ai-gateway",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "andika0x01.github.io",
+    "description": null,
+    "url": "https://github.com/andika0x01/andika0x01.github.io",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
     "name": "logbook-magang",
     "description": null,
     "url": "https://github.com/andika0x01/logbook-magang",
@@ -42,6 +56,13 @@
     "stars": 0
   },
   {
+    "name": "steam-game-recommender",
+    "description": null,
+    "url": "https://github.com/andika0x01/steam-game-recommender",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
     "name": "blog",
     "description": null,
     "url": "https://github.com/andika0x01/blog",
@@ -53,6 +74,48 @@
     "description": null,
     "url": "https://github.com/andika0x01/web3-marketplace",
     "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "random-tubes",
+    "description": null,
+    "url": "https://github.com/andika0x01/random-tubes",
+    "language": "Jupyter Notebook",
+    "stars": 0
+  },
+  {
+    "name": "maybe_cp_is_fun",
+    "description": null,
+    "url": "https://github.com/andika0x01/maybe_cp_is_fun",
+    "language": "C++",
+    "stars": 0
+  },
+  {
+    "name": "simple-hosting-app",
+    "description": null,
+    "url": "https://github.com/andika0x01/simple-hosting-app",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "minecraft-bedrock-dashboard",
+    "description": null,
+    "url": "https://github.com/andika0x01/minecraft-bedrock-dashboard",
+    "language": "Astro",
+    "stars": 0
+  },
+  {
+    "name": "typing-speed-race",
+    "description": null,
+    "url": "https://github.com/andika0x01/typing-speed-race",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "clustering-judul-skripsi",
+    "description": null,
+    "url": "https://github.com/andika0x01/clustering-judul-skripsi",
+    "language": "Jupyter Notebook",
     "stars": 0
   }
 ]

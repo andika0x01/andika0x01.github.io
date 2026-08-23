@@ -4,33 +4,78 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Ambient background characters that drift slowly in the hero
-const AMBIENT_ITEMS = [
-  { char: "{}",  x: "75%", y: "8%",  size: "clamp(16px, 2vw, 28px)" },
-  { char: "λ",   x: "84%", y: "22%", size: "clamp(14px, 1.8vw, 24px)" },
-  { char: "∀",   x: "69%", y: "40%", size: "clamp(12px, 1.5vw, 20px)" },
-  { char: "</>", x: "88%", y: "55%", size: "clamp(13px, 1.6vw, 22px)" },
-  { char: "fn",  x: "62%", y: "15%", size: "clamp(11px, 1.3vw, 18px)" },
-  { char: "⊕",   x: "91%", y: "33%", size: "clamp(18px, 2.2vw, 32px)" },
-  { char: "=>",  x: "67%", y: "70%", size: "clamp(12px, 1.5vw, 20px)" },
-  { char: "∃",   x: "79%", y: "78%", size: "clamp(16px, 1.9vw, 26px)" },
-  { char: "::",  x: "57%", y: "87%", size: "clamp(20px, 2.5vw, 36px)" },
-  { char: "[ ]", x: "93%", y: "63%", size: "clamp(13px, 1.6vw, 22px)" },
-];
-
 // Uppercase alphabet for the scramble effect
 const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 // Flattened char sequence matching DOM order: ANDIKA (0-5) + DINATA (6-11)
 const ALL_CHARS = "ANDIKADINATA";
+
+/**
+ * Interactive Pluckable Elastic String for Scroll Indicator.
+ * Bends when mouse brushes past it and oscillates back with damped wave physics.
+ */
+function PluckableScrollLine({ lineRef }: { lineRef: React.RefObject<SVGSVGElement | null> }) {
+  const pathRef = useRef<SVGPathElement>(null);
+  const cxState = useRef({ cx: 12 });
+
+  const onMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseLocalX = e.clientX - rect.left;
+    const clampedX = Math.max(0, Math.min(24, mouseLocalX));
+    
+    gsap.killTweensOf(cxState.current);
+    cxState.current.cx = clampedX;
+    if (pathRef.current) {
+      pathRef.current.setAttribute("d", `M 12 0 Q ${clampedX} 22 12 44`);
+    }
+  };
+
+  const onMouseLeave = () => {
+    gsap.killTweensOf(cxState.current);
+    gsap.to(cxState.current, {
+      cx: 12,
+      duration: 0.95,
+      ease: "elastic.out(1.4, 0.25)",
+      onUpdate: () => {
+        if (pathRef.current) {
+          pathRef.current.setAttribute("d", `M 12 0 Q ${cxState.current.cx} 22 12 44`);
+        }
+      },
+    });
+  };
+
+  return (
+    <svg
+      ref={lineRef}
+      width="24"
+      height="44"
+      viewBox="0 0 24 44"
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      style={{
+        overflow: "visible",
+        cursor: "grab",
+        opacity: 0.4,
+        marginLeft: "-6px",
+      }}
+    >
+      <path
+        ref={pathRef}
+        d="M 12 0 Q 12 22 12 44"
+        fill="none"
+        stroke="var(--muted)"
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
 
 export function HeroSection() {
   const sectionRef    = useRef<HTMLElement>(null);
   const nameBlockRef  = useRef<HTMLDivElement>(null);
   const taglineRef    = useRef<HTMLParagraphElement>(null);
   const metaRef       = useRef<HTMLDivElement>(null);
-  const scrollLineRef = useRef<HTMLDivElement>(null);
+  const scrollLineRef = useRef<SVGSVGElement>(null);
   const scrollTextRef = useRef<HTMLSpanElement>(null);
-  const ambientRefs   = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -39,7 +84,6 @@ export function HeroSection() {
       // ── Reduced-motion fallback: show everything immediately ──────────
       if (reduced) {
         gsap.set(".char", { opacity: 1 });
-        gsap.set(".ambient-char", { opacity: 0.04 });
         gsap.set(
           [taglineRef.current, metaRef.current, scrollLineRef.current, scrollTextRef.current],
           { opacity: 1, y: 0, scaleY: 1 }
@@ -47,39 +91,23 @@ export function HeroSection() {
         return;
       }
 
-      // ── Ambient chars fade in (background atmosphere) ─────────────────
-      gsap.fromTo(
-        ".ambient-char",
-        { opacity: 0 },
-        {
-          opacity: () => gsap.utils.random(0.02, 0.05),
-          duration: 2.2,
-          stagger: { each: 0.1, from: "random" },
-        }
-      );
-
       // ── Scramble effect on name chars ─────────────────────────────────
-      // Each char rapidly cycles random uppercase letters before locking
-      // onto its real character, creating a codebreaker-style reveal.
       const charEls = sectionRef.current?.querySelectorAll(".char");
-      const STAGGER   = 0.08;   // gap between each char starting
-      const SCRAMBLE  = 0.65;   // how long each char scrambles
+      const STAGGER   = 0.08;
+      const SCRAMBLE  = 0.65;
       const totalTime = (ALL_CHARS.length - 1) * STAGGER + SCRAMBLE;
 
       charEls?.forEach((el, i) => {
         const finalChar = ALL_CHARS[i];
         const delay     = i * STAGGER;
 
-        // 1. Pop char into visibility (very fast)
         gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.03, delay, ease: "none" });
 
-        // 2. Scramble using empty-object tween for timing
         gsap.to({}, {
           duration: SCRAMBLE,
           delay,
           onUpdate() {
             const p = this.progress();
-            // First 78% of duration: random letter; last 22%: lock to final
             (el as HTMLElement).textContent =
               p < 0.78
                 ? ALPHA[Math.floor(Math.random() * ALPHA.length)]
@@ -118,8 +146,6 @@ export function HeroSection() {
       );
 
       // ── Subtle breathing on name block after reveal ───────────────────
-      // Very gentle scaleX oscillation — barely perceptible but keeps the
-      // name feeling alive after the scramble settles.
       gsap.to(nameBlockRef.current, {
         scaleX: 1.0035,
         duration: 3.8,
@@ -130,23 +156,7 @@ export function HeroSection() {
         transformOrigin: "left center",
       });
 
-      // ── Ambient drift — continuous looping ───────────────────────────
-      ambientRefs.current.forEach((el) => {
-        if (!el) return;
-        gsap.to(el, {
-          x: `random(-22, 22)`,
-          y: `random(-32, 32)`,
-          rotation: `random(-8, 8)`,
-          duration: gsap.utils.random(14, 28),
-          ease: "sine.inOut",
-          repeat: -1,
-          yoyo: true,
-          delay: gsap.utils.random(0, 10),
-        });
-      });
-
       // ── Scroll parallax: name block drifts up 1.8× scroll speed ──────
-      // Creates a cinematic "peeling away" as user scrolls into About.
       gsap.to(nameBlockRef.current, {
         y: "-18vh",
         ease: "none",
@@ -162,6 +172,34 @@ export function HeroSection() {
     return () => ctx.revert();
   }, []);
 
+  /** Kinetic letter scatter on click / active hover */
+  const handleCharScatter = (e: React.MouseEvent<HTMLSpanElement> | React.PointerEvent<HTMLSpanElement>) => {
+    const el = e.currentTarget;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const dx = gsap.utils.random(-24, 24);
+    const dy = gsap.utils.random(-28, 28);
+    const rot = gsap.utils.random(-12, 12);
+
+    gsap.to(el, {
+      x: dx,
+      y: dy,
+      rotation: rot,
+      duration: 0.1,
+      ease: "power2.out",
+      overwrite: "auto",
+      onComplete: () => {
+        gsap.to(el, {
+          x: 0,
+          y: 0,
+          rotation: 0,
+          duration: 0.85,
+          ease: "elastic.out(1.2, 0.35)",
+        });
+      },
+    });
+  };
+
   /** Render a word as individual scramble-able char spans */
   const renderWord = (word: string, className: string, ariaLabel: string) => (
     <div
@@ -173,13 +211,20 @@ export function HeroSection() {
         <span
           key={i}
           className="char"
+          onPointerDown={handleCharScatter}
+          onMouseEnter={(e) => {
+            if (e.buttons > 0) handleCharScatter(e);
+          }}
           style={{
             display: "inline-block",
             fontSize: "clamp(72px, 20vw, 340px)",
             fontWeight: 900,
             letterSpacing: "-0.04em",
             lineHeight: 0.88,
-            opacity: 0, // scramble effect makes it visible
+            opacity: 0,
+            cursor: "pointer",
+            userSelect: "none",
+            willChange: "transform",
           }}
         >
           {char}
@@ -202,32 +247,12 @@ export function HeroSection() {
         overflow: "hidden",
       }}
     >
-      {/* ── Ambient floating characters ─────────────────── */}
-      {AMBIENT_ITEMS.map((item, i) => (
-        <span
-          key={i}
-          ref={(el) => { ambientRefs.current[i] = el; }}
-          className="ambient-char"
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            left: item.x,
-            top: item.y,
-            fontFamily: "'Geist Mono', ui-monospace, monospace",
-            fontSize: item.size,
-            color: "#0a0a0a",
-            opacity: 0,
-            userSelect: "none",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        >
-          {item.char}
-        </span>
-      ))}
-
-      {/* ── Name block (receives scroll parallax) ───────── */}
-      <div ref={nameBlockRef} style={{ position: "relative", zIndex: 1 }}>
+      {/* ── Name block (receives scroll parallax & kinetic velocity skew) ── */}
+      <div
+        ref={nameBlockRef}
+        data-velocity-skew
+        style={{ position: "relative", zIndex: 1, willChange: "transform" }}
+      >
         {renderWord("ANDIKA", "firstname", "ANDIKA")}
         {renderWord("DINATA", "lastname", "DINATA")}
       </div>
@@ -277,7 +302,7 @@ export function HeroSection() {
         <span>Software Engineer</span>
       </div>
 
-      {/* ── Scroll indicator ────────────────────────────── */}
+      {/* ── Scroll indicator with Pluckable Elastic String ────────────────── */}
       <div
         style={{
           position: "absolute",
@@ -285,18 +310,10 @@ export function HeroSection() {
           left: "clamp(24px, 6vw, 120px)",
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          gap: "8px",
         }}
       >
-        <div
-          ref={scrollLineRef}
-          style={{
-            width: "1px",
-            height: "44px",
-            background: "var(--muted)",
-            opacity: 0.4,
-          }}
-        />
+        <PluckableScrollLine lineRef={scrollLineRef} />
         <span
           ref={scrollTextRef}
           style={{
