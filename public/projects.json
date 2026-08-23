@@ -1,1 +1,58 @@
-[]
+[
+  {
+    "name": "logbook-magang",
+    "description": null,
+    "url": "https://github.com/andika0x01/logbook-magang",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "mini-cctv",
+    "description": null,
+    "url": "https://github.com/andika0x01/mini-cctv",
+    "language": "Python",
+    "stars": 0
+  },
+  {
+    "name": "coffee-tracker",
+    "description": null,
+    "url": "https://github.com/andika0x01/coffee-tracker",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "infinite-wiki",
+    "description": null,
+    "url": "https://github.com/andika0x01/infinite-wiki",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "quiz-interface",
+    "description": null,
+    "url": "https://github.com/andika0x01/quiz-interface",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "spaceship-titanic-kaggle",
+    "description": null,
+    "url": "https://github.com/andika0x01/spaceship-titanic-kaggle",
+    "language": "Python",
+    "stars": 0
+  },
+  {
+    "name": "blog",
+    "description": null,
+    "url": "https://github.com/andika0x01/blog",
+    "language": "TypeScript",
+    "stars": 0
+  },
+  {
+    "name": "web3-marketplace",
+    "description": null,
+    "url": "https://github.com/andika0x01/web3-marketplace",
+    "language": "TypeScript",
+    "stars": 0
+  }
+]

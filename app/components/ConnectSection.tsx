@@ -24,12 +24,10 @@ const LINKS = [
 ];
 
 /**
- * Single magnetic connect link.
+ * Single magnetic connect link with responsive stacking on mobile.
  *
  * Hover:  display text fades to 45% opacity + underline draws left → right
  * Leave:  text returns to full opacity + underline erases right → left
- *
- * No arrow icon — the line-draw is the only motion signal.
  */
 function ConnectLink({
   label,
@@ -86,13 +84,10 @@ function ConnectLink({
       href={href}
       target={href.startsWith("mailto") ? undefined : "_blank"}
       rel="noopener noreferrer"
-      className="connect-link"
+      className="connect-link group flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 max-w-full"
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
       style={{
-        display: "inline-flex",
-        alignItems: "baseline",
-        gap: "0.6rem",
         textDecoration: "none",
         color: "var(--ink)",
         opacity: 0, // revealed by GSAP
@@ -107,7 +102,7 @@ function ConnectLink({
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           color: "var(--muted)",
-          minWidth: "5rem",
+          minWidth: "4.5rem",
           flexShrink: 0,
         }}
       >
@@ -115,15 +110,23 @@ function ConnectLink({
       </span>
 
       {/* Display name + animated underline */}
-      <span style={{ position: "relative", display: "inline-block" }}>
+      <span
+        style={{
+          position: "relative",
+          display: "inline-block",
+          maxWidth: "100%",
+        }}
+      >
         <span
           ref={displayRef}
           style={{
-            fontSize: "clamp(28px, 5vw, 80px)",
+            fontSize: "clamp(20px, 5.5vw, 76px)",
             fontWeight: 700,
             letterSpacing: "-0.03em",
-            lineHeight: 1.05,
+            lineHeight: 1.1,
             display: "block",
+            overflowWrap: "anywhere",
+            wordBreak: "break-word",
           }}
         >
           {display}
@@ -224,6 +227,8 @@ export function ConnectSection() {
       style={{
         padding: "clamp(80px, 12vw, 160px) clamp(24px, 6vw, 120px)",
         paddingBottom: "clamp(60px, 8vw, 120px)",
+        maxWidth: "100%",
+        overflowX: "hidden",
       }}
     >
       {/* Eyebrow label */}
@@ -249,7 +254,8 @@ export function ConnectSection() {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "clamp(0.5rem, 1.5vw, 1.25rem)",
+          gap: "clamp(1rem, 2.5vw, 2rem)",
+          maxWidth: "100%",
         }}
       >
         {LINKS.map((link) => (
