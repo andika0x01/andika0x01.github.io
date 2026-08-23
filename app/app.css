@@ -1,15 +1,88 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
+/* ── Design tokens ─────────────────────────────── */
+:root {
+  --ink: #0a0a0a;
+  --muted: #8c8c8c;
+  --ghost: #f2f2f2;
+  --accent: #e8e0ff;
+}
+
+/* ── Base ──────────────────────────────────────── */
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  background-color: #ffffff;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+/* Hide default cursor only on real pointer devices */
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: none;
+  }
+
+  a,
+  button,
+  [data-magnetic] {
+    cursor: none;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Selection ─────────────────────────────────── */
+::selection {
+  background: var(--accent);
+}
+
+/* ── Focus ─────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* ── Skill pills ───────────────────────────────── */
+.skill-pill {
+  transition: background 0.18s ease;
+  border-radius: 3px;
+}
+
+.skill-pill:hover {
+  background: var(--ghost);
+}
+
+/* ── Project rows ──────────────────────────────── */
+.project-row {
+  transition: opacity 0.15s ease;
+}
+
+.project-row:hover {
+  opacity: 0.65;
+}
+
+/* ── Connect links ─────────────────────────────── */
+.connect-link {
+  transition: color 0.15s ease;
+}
+
+/* ── Reduced motion ────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

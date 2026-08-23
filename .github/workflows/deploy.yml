@@ -55,6 +55,23 @@ jobs:
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
         working-directory: ${{ env.BUILD_PATH }}
+      - name: Fetch GitHub public projects
+        run: |
+          curl -sf \
+            -H "Authorization: Bearer ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "User-Agent: andika0x01-site-build" \
+            "https://api.github.com/users/andika0x01/repos?type=public&sort=pushed&per_page=30" \
+          | jq '[
+              .[]
+              | select(.fork == false and .archived == false)
+              | { name: .name, description: .description, url: .html_url, language: .language, stars: .stargazers_count }
+            ] | .[:8]' \
+          > public/projects.json \
+          || echo '[]' > public/projects.json
+          echo "Projects written:"
+          cat public/projects.json
+        working-directory: ${{ env.BUILD_PATH }}
       - name: Build
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
         working-directory: ${{ env.BUILD_PATH }}
