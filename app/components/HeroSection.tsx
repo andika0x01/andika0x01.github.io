@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useScrambleHover } from "../hooks/useScrambleHover";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -71,6 +72,11 @@ export function HeroSection() {
   const scrollLineRef = useRef<SVGSVGElement>(null);
   const scrollTextRef = useRef<HTMLSpanElement>(null);
 
+  // Meta items hover scramble hooks
+  const { trigger: triggerCityScramble, ref: cityRef } = useScrambleHover<HTMLSpanElement>("Bandar Lampung, ID", { duration: 0.25 });
+  const { trigger: triggerCampusScramble, ref: campusRef } = useScrambleHover<HTMLSpanElement>("Sumatera Institute of Technology", { duration: 0.25 });
+  const { trigger: triggerRoleScramble, ref: roleRef } = useScrambleHover<HTMLSpanElement>("Software Engineer", { duration: 0.22 });
+
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -78,7 +84,11 @@ export function HeroSection() {
       // ── Reduced-motion fallback: show everything immediately ──────────
       if (reduced) {
         gsap.set(".char", { opacity: 1 });
-        gsap.set([taglineRef.current, metaRef.current, scrollLineRef.current, scrollTextRef.current], { opacity: 1, y: 0, scaleY: 1 });
+        gsap.set([taglineRef.current, metaRef.current, scrollLineRef.current, scrollTextRef.current], {
+          opacity: 1,
+          y: 0,
+          scaleY: 1,
+        });
         return;
       }
 
@@ -117,7 +127,11 @@ export function HeroSection() {
       gsap.fromTo(metaRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out", delay: totalTime + 0.22 });
 
       // ── Scroll indicator: line draws down, then text appears ──────────
-      gsap.fromTo(scrollLineRef.current, { scaleY: 0, transformOrigin: "top center" }, { scaleY: 1, duration: 0.85, ease: "power2.inOut", delay: totalTime + 0.42 });
+      gsap.fromTo(
+        scrollLineRef.current,
+        { scaleY: 0, transformOrigin: "top center" },
+        { scaleY: 1, duration: 0.85, ease: "power2.inOut", delay: totalTime + 0.42 }
+      );
       gsap.fromTo(scrollTextRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4, delay: totalTime + 1.15 });
 
       // ── Subtle breathing on name block after reveal ───────────────────
@@ -175,6 +189,57 @@ export function HeroSection() {
     });
   };
 
+  /** Chiasmus Tagline word focus & mirror hover */
+  const handleWordEnter = (wordType: "code" | "think" | "other") => {
+    if (wordType === "code") {
+      const els = sectionRef.current?.querySelectorAll(".tagline-code");
+      els?.forEach((el) => {
+        gsap.to(el, { color: "var(--ink)", y: -1.5, duration: 0.2, ease: "power2.out", overwrite: "auto" });
+      });
+    } else if (wordType === "think") {
+      const els = sectionRef.current?.querySelectorAll(".tagline-think");
+      els?.forEach((el) => {
+        gsap.to(el, { color: "var(--ink)", y: -1.5, duration: 0.2, ease: "power2.out", overwrite: "auto" });
+      });
+    }
+  };
+
+  const handleWordLeave = (wordType: "code" | "think" | "other") => {
+    if (wordType === "code") {
+      const els = sectionRef.current?.querySelectorAll(".tagline-code");
+      els?.forEach((el) => {
+        gsap.to(el, { color: "var(--muted)", y: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+      });
+    } else if (wordType === "think") {
+      const els = sectionRef.current?.querySelectorAll(".tagline-think");
+      els?.forEach((el) => {
+        gsap.to(el, { color: "var(--muted)", y: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+      });
+    }
+  };
+
+  /** Scroll indicator ripple wave on hover */
+  const handleScrollHover = () => {
+    const chars = scrollTextRef.current?.querySelectorAll(".scroll-char");
+    if (!chars) return;
+    gsap.to(chars, {
+      y: -3,
+      duration: 0.15,
+      stagger: 0.035,
+      ease: "power2.out",
+      yoyo: true,
+      repeat: 1,
+      overwrite: "auto",
+    });
+  };
+
+  const handleScrollDown = () => {
+    const nextSection = document.querySelectorAll("section")[1];
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   /** Render a word as individual scramble-able char spans */
   const renderWord = (word: string, className: string, ariaLabel: string) => (
     <div className={className} aria-label={ariaLabel} style={{ lineHeight: 0.88 }}>
@@ -188,7 +253,7 @@ export function HeroSection() {
           }}
           style={{
             display: "inline-block",
-            fontSize: "clamp(72px, 20vw, 340px)",
+            fontSize: "clamp(46px, 16.5vw, 340px)",
             fontWeight: 900,
             letterSpacing: "-0.04em",
             lineHeight: 0.88,
@@ -213,9 +278,11 @@ export function HeroSection() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        padding: "clamp(24px, 6vw, 120px)",
-        paddingTop: "clamp(80px, 10vw, 160px)",
+        padding: "clamp(20px, 5.5vw, 120px)",
+        paddingTop: "clamp(64px, 10vw, 140px)",
+        paddingBottom: "clamp(84px, 11vw, 120px)",
         overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
       {/* ── Name block (receives scroll parallax & kinetic velocity skew) ── */}
@@ -224,59 +291,123 @@ export function HeroSection() {
         {renderWord("DINATA", "lastname", "DINATA")}
       </div>
 
-      {/* ── Tagline ─────────────────────────────────────── */}
+      {/* ── Tagline (Chiasmus Mirror Resonance & Word Optical Focus) ─────── */}
       <p
         ref={taglineRef}
         style={{
-          marginTop: "clamp(1.5rem, 3vw, 3.5rem)",
-          fontSize: "clamp(16px, 1.9vw, 28px)",
+          marginTop: "clamp(1.25rem, 3vw, 3.25rem)",
+          fontSize: "clamp(16px, 3.8vw, 28px)",
           fontWeight: 300,
           color: "var(--muted)",
-          lineHeight: 1.6,
-          maxWidth: "min(520px, 90vw)",
+          lineHeight: 1.5,
+          maxWidth: "min(540px, 100%)",
           opacity: 0,
           position: "relative",
           zIndex: 1,
         }}
       >
-        I write code to think.
-        <br />I think to write better code.
+        <span>I write </span>
+        <span
+          className="tagline-code"
+          onMouseEnter={() => handleWordEnter("code")}
+          onMouseLeave={() => handleWordLeave("code")}
+          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+        >
+          code
+        </span>
+        <span> to </span>
+        <span
+          className="tagline-think"
+          onMouseEnter={() => handleWordEnter("think")}
+          onMouseLeave={() => handleWordLeave("think")}
+          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+        >
+          think.
+        </span>
+        <br />
+        <span>I </span>
+        <span
+          className="tagline-think"
+          onMouseEnter={() => handleWordEnter("think")}
+          onMouseLeave={() => handleWordLeave("think")}
+          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+        >
+          think
+        </span>
+        <span> to write better </span>
+        <span
+          className="tagline-code"
+          onMouseEnter={() => handleWordEnter("code")}
+          onMouseLeave={() => handleWordLeave("code")}
+          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+        >
+          code.
+        </span>
       </p>
 
-      {/* ── Meta ────────────────────────────────────────── */}
+      {/* ── Meta (Interactive Segment Scramble & Clean Geo-Coordinates) ─── */}
       <div
         ref={metaRef}
         style={{
-          marginTop: "clamp(0.75rem, 1.5vw, 1.25rem)",
+          marginTop: "clamp(0.75rem, 1.8vw, 1.35rem)",
           display: "flex",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: "0.4rem 0.65rem",
+          gap: "0.35rem 0.65rem",
           fontFamily: "'Geist Mono', ui-monospace, monospace",
-          fontSize: "clamp(10px, 1vw, 13px)",
+          fontSize: "clamp(11px, 2.4vw, 13px)",
           color: "var(--muted)",
-          letterSpacing: "0.05em",
+          letterSpacing: "0.04em",
           opacity: 0,
           position: "relative",
           zIndex: 1,
+          maxWidth: "100%",
         }}
       >
-        <span>Bandar Lampung, ID</span>
+        <span
+          ref={cityRef}
+          onMouseEnter={() => triggerCityScramble()}
+          style={{
+            whiteSpace: "nowrap",
+            cursor: "default",
+          }}
+        >
+          Bandar Lampung, ID
+        </span>
         <span style={{ opacity: 0.35 }}>·</span>
-        <span>Sumatera Institute of Technology</span>
+        <span
+          ref={campusRef}
+          onMouseEnter={() => triggerCampusScramble()}
+          style={{ cursor: "default" }}
+        >
+          Sumatera Institute of Technology
+        </span>
         <span style={{ opacity: 0.35 }}>·</span>
-        <span>Software Engineer</span>
+        <span
+          ref={roleRef}
+          onMouseEnter={() => triggerRoleScramble()}
+          style={{ whiteSpace: "nowrap", cursor: "default" }}
+        >
+          Software Engineer
+        </span>
       </div>
 
-      {/* ── Scroll indicator with Pluckable Elastic String ────────────────── */}
+      {/* ── Scroll indicator with Pluckable String & Kinetic Wave ───────── */}
       <div
+        onClick={handleScrollDown}
+        onMouseEnter={handleScrollHover}
+        role="button"
+        tabIndex={0}
+        aria-label="Scroll to About section"
         style={{
           position: "absolute",
-          bottom: "clamp(24px, 4vw, 48px)",
-          left: "clamp(24px, 6vw, 120px)",
+          bottom: "clamp(20px, 3.5vw, 44px)",
+          left: "clamp(20px, 5.5vw, 120px)",
           display: "flex",
           alignItems: "center",
           gap: "8px",
+          cursor: "pointer",
+          zIndex: 2,
         }}
       >
         <PluckableScrollLine lineRef={scrollLineRef} />
@@ -289,9 +420,16 @@ export function HeroSection() {
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             opacity: 0,
+            userSelect: "none",
+            display: "inline-flex",
+            gap: "0.05em",
           }}
         >
-          scroll
+          {"scroll".split("").map((c, i) => (
+            <span key={i} className="scroll-char" style={{ display: "inline-block" }}>
+              {c}
+            </span>
+          ))}
         </span>
       </div>
     </section>
