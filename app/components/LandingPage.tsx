@@ -1,6 +1,4 @@
 import { CustomCursor } from "./CustomCursor";
-import { GraphCanvas } from "./GraphCanvas";
-import { SystemHUD } from "./SystemHUD";
 import { HeroSection } from "./HeroSection";
 import { AboutSection } from "./AboutSection";
 import { SkillsSection } from "./SkillsSection";
@@ -26,9 +24,7 @@ export function LandingPage({ projects }: LandingPageProps) {
         position: "relative",
       }}
     >
-      <GraphCanvas />
       <CustomCursor />
-      <SystemHUD />
       <HeroSection />
       <AboutSection />
       <SkillsSection />
