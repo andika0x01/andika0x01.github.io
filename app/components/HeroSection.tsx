@@ -115,32 +115,99 @@ export function HeroSection() {
   };
 
   /** Chiasmus Tagline word focus & mirror hover */
-  const handleWordEnter = (wordType: "code" | "think" | "other") => {
-    if (wordType === "code") {
-      const els = sectionRef.current?.querySelectorAll(".tagline-code");
-      els?.forEach((el) => {
-        gsap.to(el, { color: "var(--ink)", y: -1.5, duration: 0.2, ease: "power2.out", overwrite: "auto" });
+  const handleChiasmusEnter = (type: "code" | "think") => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // Elevate mirror words
+    const mirrorEls = sectionRef.current?.querySelectorAll<HTMLElement>(`.tagline-${type}`);
+    mirrorEls?.forEach((el) => {
+      gsap.to(el, {
+        color: "var(--ink)",
+        y: -4,
+        scale: 1.08,
+        fontWeight: type === "code" ? 700 : 600,
+        letterSpacing: type === "think" ? "0.04em" : "0.01em",
+        duration: 0.22,
+        ease: "power2.out",
+        overwrite: "auto",
       });
-    } else if (wordType === "think") {
-      const els = sectionRef.current?.querySelectorAll(".tagline-think");
-      els?.forEach((el) => {
-        gsap.to(el, { color: "var(--ink)", y: -1.5, duration: 0.2, ease: "power2.out", overwrite: "auto" });
+    });
+
+    // Dim non-matching words for high-contrast focus depth
+    const otherEls = sectionRef.current?.querySelectorAll<HTMLElement>(`.tagline-word:not(.tagline-${type})`);
+    otherEls?.forEach((el) => {
+      gsap.to(el, {
+        opacity: 0.28,
+        duration: 0.22,
+        ease: "power2.out",
+        overwrite: "auto",
       });
-    }
+    });
   };
 
-  const handleWordLeave = (wordType: "code" | "think" | "other") => {
-    if (wordType === "code") {
-      const els = sectionRef.current?.querySelectorAll(".tagline-code");
-      els?.forEach((el) => {
-        gsap.to(el, { color: "var(--muted)", y: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+  const handleChiasmusLeave = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const allWords = sectionRef.current?.querySelectorAll<HTMLElement>(".tagline-word");
+    allWords?.forEach((el) => {
+      gsap.to(el, {
+        color: "var(--muted)",
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        fontWeight: 300,
+        letterSpacing: "normal",
+        duration: 0.35,
+        ease: "power2.out",
+        overwrite: "auto",
       });
-    } else if (wordType === "think") {
-      const els = sectionRef.current?.querySelectorAll(".tagline-think");
-      els?.forEach((el) => {
-        gsap.to(el, { color: "var(--muted)", y: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+    });
+  };
+
+  /** General word hover for surrounding words */
+  const handleSingleWordEnter = (e: React.MouseEvent<HTMLSpanElement>) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const target = e.currentTarget;
+
+    gsap.to(target, {
+      color: "var(--ink)",
+      y: -3,
+      fontWeight: 500,
+      scale: 1.05,
+      duration: 0.2,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+
+    const allWords = sectionRef.current?.querySelectorAll<HTMLElement>(".tagline-word");
+    allWords?.forEach((el) => {
+      if (el !== target) {
+        gsap.to(el, {
+          opacity: 0.45,
+          duration: 0.2,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      }
+    });
+  };
+
+  const handleSingleWordLeave = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const allWords = sectionRef.current?.querySelectorAll<HTMLElement>(".tagline-word");
+    allWords?.forEach((el) => {
+      gsap.to(el, {
+        color: "var(--muted)",
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        fontWeight: 300,
+        duration: 0.35,
+        ease: "elastic.out(1, 0.4)",
+        overwrite: "auto",
       });
-    }
+    });
   };
 
   /** Render a word as individual scramble-able char spans */
@@ -209,40 +276,114 @@ export function HeroSection() {
           zIndex: 1,
         }}
       >
-        <span>I write </span>
         <span
-          className="tagline-code"
-          onMouseEnter={() => handleWordEnter("code")}
-          onMouseLeave={() => handleWordLeave("code")}
-          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+          className="tagline-word"
+          onMouseEnter={handleSingleWordEnter}
+          onMouseLeave={handleSingleWordLeave}
+          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
+        >
+          I
+        </span>
+        <span
+          className="tagline-word"
+          onMouseEnter={handleSingleWordEnter}
+          onMouseLeave={handleSingleWordLeave}
+          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
+        >
+          write
+        </span>
+        <span
+          className="tagline-word tagline-code"
+          onMouseEnter={() => handleChiasmusEnter("code")}
+          onMouseLeave={handleChiasmusLeave}
+          style={{
+            display: "inline-block",
+            cursor: "default",
+            marginRight: "0.28em",
+            willChange: "transform, opacity, color",
+            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
+          }}
         >
           code
         </span>
-        <span> to </span>
         <span
-          className="tagline-think"
-          onMouseEnter={() => handleWordEnter("think")}
-          onMouseLeave={() => handleWordLeave("think")}
-          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+          className="tagline-word"
+          onMouseEnter={handleSingleWordEnter}
+          onMouseLeave={handleSingleWordLeave}
+          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
+        >
+          to
+        </span>
+        <span
+          className="tagline-word tagline-think"
+          onMouseEnter={() => handleChiasmusEnter("think")}
+          onMouseLeave={handleChiasmusLeave}
+          style={{
+            display: "inline-block",
+            cursor: "default",
+            willChange: "transform, opacity, color",
+            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
+          }}
         >
           think.
         </span>
         <br />
-        <span>I </span>
         <span
-          className="tagline-think"
-          onMouseEnter={() => handleWordEnter("think")}
-          onMouseLeave={() => handleWordLeave("think")}
-          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+          className="tagline-word"
+          onMouseEnter={handleSingleWordEnter}
+          onMouseLeave={handleSingleWordLeave}
+          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
+        >
+          I
+        </span>
+        <span
+          className="tagline-word tagline-think"
+          onMouseEnter={() => handleChiasmusEnter("think")}
+          onMouseLeave={handleChiasmusLeave}
+          style={{
+            display: "inline-block",
+            cursor: "default",
+            marginRight: "0.28em",
+            willChange: "transform, opacity, color",
+            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
+          }}
         >
           think
         </span>
-        <span> to write better </span>
         <span
-          className="tagline-code"
-          onMouseEnter={() => handleWordEnter("code")}
-          onMouseLeave={() => handleWordLeave("code")}
-          style={{ display: "inline-block", cursor: "default", transition: "color 0.2s ease" }}
+          className="tagline-word"
+          onMouseEnter={handleSingleWordEnter}
+          onMouseLeave={handleSingleWordLeave}
+          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
+        >
+          to
+        </span>
+        <span
+          className="tagline-word"
+          onMouseEnter={handleSingleWordEnter}
+          onMouseLeave={handleSingleWordLeave}
+          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
+        >
+          write
+        </span>
+        <span
+          className="tagline-word"
+          onMouseEnter={handleSingleWordEnter}
+          onMouseLeave={handleSingleWordLeave}
+          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
+        >
+          better
+        </span>
+        <span
+          className="tagline-word tagline-code"
+          onMouseEnter={() => handleChiasmusEnter("code")}
+          onMouseLeave={handleChiasmusLeave}
+          style={{
+            display: "inline-block",
+            cursor: "default",
+            willChange: "transform, opacity, color",
+            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
+          }}
         >
           code.
         </span>

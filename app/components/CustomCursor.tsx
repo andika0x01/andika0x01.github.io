@@ -74,11 +74,26 @@ export function CustomCursor() {
         ease: "power2.out",
       });
 
-    const interactives = document.querySelectorAll("a, button, [data-magnetic], .skill-pill, .char");
-    interactives.forEach((el) => {
-      el.addEventListener("mouseenter", onEnter);
-      el.addEventListener("mouseleave", onLeave);
-    });
+    const interactiveSelector = "a, button, [data-magnetic], .skill-pill, .char, .tagline-word, .keyword-chip, [data-cursor-hover]";
+
+    const onMouseOver = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement | null)?.closest(interactiveSelector);
+      if (target) {
+        onEnter();
+      }
+    };
+
+    const onMouseOut = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement | null)?.closest(interactiveSelector);
+      const related = (e.relatedTarget as HTMLElement | null)?.closest(interactiveSelector);
+      // Only trigger leave if not moving to another interactive element
+      if (target && target !== related) {
+        onLeave();
+      }
+    };
+
+    document.addEventListener("mouseover", onMouseOver);
+    document.addEventListener("mouseout", onMouseOut);
 
     // Concentric Shockwave Click Waveform
     const onPointerDown = (e: PointerEvent) => {
@@ -119,11 +134,9 @@ export function CustomCursor() {
     return () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("mouseover", onMouseOver);
+      document.removeEventListener("mouseout", onMouseOut);
       gsap.ticker.remove(tick);
-      interactives.forEach((el) => {
-        el.removeEventListener("mouseenter", onEnter);
-        el.removeEventListener("mouseleave", onLeave);
-      });
     };
   }, []);
 

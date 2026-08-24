@@ -8,24 +8,28 @@ gsap.registerPlugin(ScrollTrigger);
 const PARAGRAPHS = [
   {
     text: "I'm a computer science student at the Sumatera Institute of Technology, based in Bandar Lampung.",
+    highlights: ["Sumatera", "Institute", "of", "Technology,"],
     size: "clamp(20px, 2.4vw, 34px)",
     weight: 500,
     muted: false,
   },
   {
     text: "I first touched code at thirteen — HTML and CSS, a blinking cursor, a browser tab open with the quiet wonder that something I typed could appear on a screen.",
+    highlights: ["HTML", "and", "CSS,"],
     size: "clamp(17px, 1.9vw, 26px)",
     weight: 400,
     muted: false,
   },
   {
     text: "That feeling has shifted shape. Today I'm more drawn to the theory underneath: algorithms, formal systems, the mathematics that computation rests on. I have a slow obsession with cybersecurity — not just breaking things, but understanding systems at a depth that makes their seams visible.",
+    highlights: ["algorithms,", "formal", "systems,", "cybersecurity"],
     size: "clamp(17px, 1.9vw, 26px)",
     weight: 400,
     muted: false,
   },
   {
     text: "I'm still writing code. I'll probably keep going.",
+    highlights: [],
     size: "clamp(16px, 1.7vw, 24px)",
     weight: 400,
     muted: true,
@@ -33,34 +37,45 @@ const PARAGRAPHS = [
 ];
 
 /**
- * Splits a string into word spans, each wrapped in an overflow:hidden
- * container so GSAP can clip-reveal them from below individually.
+ * Splits a string into word spans, each wrapped in a container
+ * so GSAP can clip-reveal them from below individually.
  */
-function WordSplit({ text }: { text: string }) {
+function WordSplit({ text, highlights = [] }: { text: string; highlights?: string[] }) {
   const words = text.split(" ");
   return (
     <>
-      {words.map((word, i) => (
-        <span
-          key={i}
-          style={{
-            display: "inline-block",
-            overflow: "hidden",
-            verticalAlign: "bottom",
-          }}
-        >
+      {words.map((word, i) => {
+        const isHighlight = highlights.includes(word);
+        return (
           <span
-            className="word-inner proximity-word"
+            key={i}
+            className="word-clip-container"
             style={{
               display: "inline-block",
-              transition: "letter-spacing 0.2s ease, opacity 0.2s ease",
+              overflow: "hidden",
+              verticalAlign: "bottom",
+              paddingBottom: "0.12em",
+              marginBottom: "-0.12em",
             }}
           >
-            {word}
-            {i < words.length - 1 ? "\u00A0" : ""}
+            <span
+              className={`word-inner proximity-word ${isHighlight ? "keyword-chip" : ""}`}
+              data-cursor-hover={isHighlight ? "true" : undefined}
+              style={{
+                display: "inline-block",
+                willChange: "transform, letter-spacing",
+                fontWeight: isHighlight ? 600 : undefined,
+                color: isHighlight ? "var(--ink)" : undefined,
+                borderBottom: isHighlight ? "1.5px dashed rgba(10, 10, 10, 0.4)" : undefined,
+                paddingBottom: isHighlight ? "1px" : undefined,
+              }}
+            >
+              {word}
+              {i < words.length - 1 ? "\u00A0" : ""}
+            </span>
           </span>
-        </span>
-      ))}
+        );
+      })}
     </>
   );
 }
@@ -101,6 +116,7 @@ export function AboutSection() {
       paraRefs.current.forEach((el) => {
         if (!el) return;
         const wordInners = el.querySelectorAll(".word-inner");
+        const containers = el.querySelectorAll<HTMLElement>(".word-clip-container");
         gsap.fromTo(
           wordInners,
           { yPercent: 110 },
@@ -114,12 +130,18 @@ export function AboutSection() {
               start: "top 87%",
               toggleActions: "play none none none",
             },
+            onComplete: () => {
+              // Release overflow clipping after reveal so hover translations never get clipped
+              containers.forEach((c) => {
+                c.style.overflow = "visible";
+              });
+            },
           }
         );
       });
     }, sectionRef);
 
-    // ── Typographic Proximity Optical Lens ─────────────────────────
+    // ── Typographic Proximity Optical Lens (Fluid kinetic word physics) ──
     const section = sectionRef.current;
     if (!section || reduced || window.matchMedia("(hover: none)").matches) {
       return () => ctx.revert();
@@ -142,7 +164,7 @@ export function AboutSection() {
 
     const updateProximity = () => {
       if (mouseX !== -9999) {
-        const radius = 120;
+        const radius = 160;
         words.forEach((word) => {
           const rect = word.getBoundingClientRect();
           const cx = rect.left + rect.width / 2;
@@ -150,9 +172,9 @@ export function AboutSection() {
           const dist = Math.hypot(mouseX - cx, mouseY - cy);
 
           if (dist < radius) {
-            const p = Math.pow(1 - dist / radius, 1.6);
-            word.style.letterSpacing = `${(p * 0.025).toFixed(4)}em`;
-            word.style.transform = `translateY(${(-p * 1.5).toFixed(2)}px)`;
+            const p = Math.pow(1 - dist / radius, 1.8);
+            word.style.letterSpacing = `${(p * 0.045).toFixed(4)}em`;
+            word.style.transform = `translateY(${(-p * 5.5).toFixed(2)}px) scale(${(1 + p * 0.04).toFixed(3)})`;
           } else if (word.style.letterSpacing !== "") {
             word.style.letterSpacing = "";
             word.style.transform = "";
@@ -180,6 +202,48 @@ export function AboutSection() {
       cancelAnimationFrame(animId);
     };
   }, []);
+
+  /** Editorial Reading Focus: Highlight hovered paragraph, dim siblings */
+  const handleParaEnter = (index: number) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    paraRefs.current.forEach((el, i) => {
+      if (!el) return;
+      if (i === index) {
+        gsap.to(el, {
+          opacity: 1,
+          x: 6,
+          duration: 0.28,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      } else {
+        gsap.to(el, {
+          opacity: 0.32,
+          x: 0,
+          duration: 0.28,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      }
+    });
+  };
+
+  const handleParaLeave = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    paraRefs.current.forEach((el, i) => {
+      if (!el) return;
+      const isMuted = PARAGRAPHS[i].muted;
+      gsap.to(el, {
+        opacity: isMuted ? 0.65 : 1,
+        x: 0,
+        duration: 0.35,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    });
+  };
 
   return (
     <section
@@ -210,22 +274,24 @@ export function AboutSection() {
       </span>
 
       {/* Paragraphs — each word clips in from below on scroll */}
-      <div data-velocity-skew style={{ willChange: "transform" }}>
+      <div data-velocity-skew onMouseLeave={handleParaLeave} style={{ willChange: "transform" }}>
         {PARAGRAPHS.map((para, i) => (
           <p
             key={i}
             ref={(el) => {
               paraRefs.current[i] = el;
             }}
+            onMouseEnter={() => handleParaEnter(i)}
             style={{
               fontSize: para.size,
               fontWeight: para.weight,
               lineHeight: 1.62,
               color: para.muted ? "var(--muted)" : "var(--ink)",
               marginBottom: i === PARAGRAPHS.length - 1 ? 0 : "clamp(1.5rem, 2.5vw, 2.5rem)",
+              transition: "opacity 0.28s ease, transform 0.28s ease",
             }}
           >
-            <WordSplit text={para.text} />
+            <WordSplit text={para.text} highlights={para.highlights} />
           </p>
         ))}
       </div>
