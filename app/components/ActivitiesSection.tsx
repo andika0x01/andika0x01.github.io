@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useScrambleHover } from "../hooks/useScrambleHover";
+import { attachProximity, revealEditorialBlock, revealLabel, motionSystem } from "../lib/motionSystem";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,8 +21,8 @@ function WordReveal({ text }: { text: string }) {
   return (
     <>
       {words.map((word, i) => (
-        <span key={i} className="activity-word-clip" style={{ display: "inline-block", overflow: "hidden", verticalAlign: "bottom", paddingBottom: "0.12em", marginBottom: "-0.12em" }}>
-          <span className="activity-word" style={{ display: "inline-block", willChange: "transform" }}>
+        <span key={i} className="activity-word-clip motion-word-clip" style={{ display: "inline-block", overflow: "hidden", verticalAlign: "bottom", paddingBottom: "0.12em", marginBottom: "-0.12em" }}>
+          <span className="activity-word motion-word motion-proximity-word" style={{ display: "inline-block", willChange: "transform, letter-spacing, background-color" }}>
             {word}{i < words.length - 1 ? "\u00A0" : ""}
           </span>
         </span>
@@ -48,13 +49,7 @@ export function ActivitiesSection() {
         return;
       }
 
-      gsap.fromTo(labelRef.current, { y: 12, opacity: 0 }, {
-        y: 0,
-        opacity: 1,
-        duration: 0.5,
-        ease: "power2.out",
-        scrollTrigger: { trigger: labelRef.current, start: "top 90%", toggleActions: "play none none none" },
-      });
+      revealLabel(labelRef.current, labelRef.current);
 
       sectionRef.current?.querySelectorAll<HTMLElement>(".activity-card").forEach((card) => {
         const line = card.querySelector(".activity-line");
@@ -64,38 +59,33 @@ export function ActivitiesSection() {
         const clips = card.querySelectorAll<HTMLElement>(".activity-word-clip");
         const link = card.querySelector(".activity-link");
 
-        gsap.timeline({ scrollTrigger: { trigger: card, start: "top 82%", toggleActions: "play none none none" } })
-          .fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: 0.72, ease: "power2.inOut", transformOrigin: "left center" })
-          .fromTo(meta, { y: 14, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.04, duration: 0.45, ease: "power2.out" }, "-=0.42")
-          .fromTo(title, { y: 34, opacity: 0, letterSpacing: "-0.09em" }, { y: 0, opacity: 1, letterSpacing: "-0.06em", duration: 0.7, ease: "power4.out" }, "-=0.22")
-          .fromTo(words, { yPercent: 115 }, {
-            yPercent: 0,
-            stagger: { each: 0.018, from: "start" },
-            duration: 0.5,
-            ease: "power3.out",
-            onComplete: () => clips.forEach((clip) => (clip.style.overflow = "visible")),
-          }, "-=0.25")
-          .fromTo(link, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "power2.out" }, "-=0.18");
+        revealEditorialBlock({ trigger: card, line, meta, title, words, clips, link });
       });
     }, sectionRef);
 
-    return () => ctx.revert();
+    const section = sectionRef.current;
+    if (!section || reduced || window.matchMedia("(hover: none)").matches) {
+      return () => ctx.revert();
+    }
+
+    const detachProximity = attachProximity(section);
+
+    return () => {
+      ctx.revert();
+      detachProximity();
+    };
   }, []);
 
   const handleEnter = () => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const card = sectionRef.current?.querySelector(".activity-card");
-    const title = sectionRef.current?.querySelector(".activity-title");
-    gsap.to(card, { x: 8, duration: 0.26, ease: "power2.out", overwrite: "auto" });
-    gsap.to(title, { skewX: -2, duration: 0.22, ease: "power2.out", overwrite: "auto" });
+    if (card) gsap.to(card, motionSystem.hoverFocus.active);
   };
 
   const handleLeave = () => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const card = sectionRef.current?.querySelector(".activity-card");
-    const title = sectionRef.current?.querySelector(".activity-title");
-    gsap.to(card, { x: 0, duration: 0.34, ease: "power2.out", overwrite: "auto" });
-    gsap.to(title, { skewX: 0, duration: 0.45, ease: "elastic.out(1, 0.35)", overwrite: "auto" });
+    if (card) gsap.to(card, motionSystem.hoverFocus.reset);
   };
 
   return (

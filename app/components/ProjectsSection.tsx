@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useScrambleHover } from "../hooks/useScrambleHover";
+import { motionSystem, revealLabel, revealList } from "../lib/motionSystem";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -62,59 +63,25 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
         return;
       }
 
-      gsap.fromTo(
-        labelRef.current,
-        { y: 12, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.5,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: labelRef.current,
-            start: "top 90%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
+      revealLabel(labelRef.current, labelRef.current);
 
       const rows = sectionRef.current?.querySelectorAll(".project-row");
       rows?.forEach((row) => {
         const divider = row.querySelector(".project-divider");
 
         // Row slide-in
-        gsap.fromTo(
-          row,
-          { x: -24, opacity: 0 },
-          {
-            x: 0,
-            opacity: 1,
-            duration: 0.55,
-            ease: "power3.out",
+        revealList(row, row, "top 88%");
+
+        // Kinetic line-draw on divider
+        if (divider) {
+          gsap.fromTo(divider, motionSystem.divider.from, {
+            ...motionSystem.divider.to,
             scrollTrigger: {
               trigger: row,
               start: "top 88%",
               toggleActions: "play none none none",
             },
-          }
-        );
-
-        // Kinetic line-draw on divider
-        if (divider) {
-          gsap.fromTo(
-            divider,
-            { scaleX: 0, transformOrigin: "left center" },
-            {
-              scaleX: 1,
-              duration: 0.7,
-              ease: "power2.inOut",
-              scrollTrigger: {
-                trigger: row,
-                start: "top 88%",
-                toggleActions: "play none none none",
-              },
-            }
-          );
+          });
         }
       });
     }, sectionRef);
@@ -152,10 +119,10 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
     rows?.forEach((row, i) => {
       const divider = row.querySelector<HTMLElement>(".project-divider");
       if (i === index) {
-        gsap.to(row, { opacity: 1, x: 8, duration: 0.22, ease: "power2.out", overwrite: "auto" });
+        gsap.to(row, motionSystem.hoverFocus.active);
         if (divider) gsap.to(divider, { opacity: 1, background: "rgba(10,10,10,0.22)", duration: 0.22, overwrite: "auto" });
       } else {
-        gsap.to(row, { opacity: 0.28, x: 0, duration: 0.22, ease: "power2.out", overwrite: "auto" });
+        gsap.to(row, motionSystem.hoverFocus.inactive);
         if (divider) gsap.to(divider, { opacity: 0.3, background: "rgba(10,10,10,0.06)", duration: 0.22, overwrite: "auto" });
       }
     });
@@ -183,7 +150,7 @@ export function ProjectsSection({ projects }: { projects: Project[] }) {
       const rows = sectionRef.current?.querySelectorAll<HTMLElement>(".project-row");
       rows?.forEach((row) => {
         const divider = row.querySelector<HTMLElement>(".project-divider");
-        gsap.to(row, { opacity: 1, x: 0, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+        gsap.to(row, motionSystem.hoverFocus.reset);
         if (divider) gsap.to(divider, { opacity: 1, background: "rgba(10,10,10,0.08)", duration: 0.3, overwrite: "auto" });
       });
 

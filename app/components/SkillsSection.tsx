@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useMagneticHover } from "../hooks/useMagneticHover";
 import { useScrambleHover } from "../hooks/useScrambleHover";
+import { revealLabel, motionSystem } from "../lib/motionSystem";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -142,21 +143,7 @@ export function SkillsSection() {
       }
 
       // Eyebrow label
-      gsap.fromTo(
-        labelRef.current,
-        { y: 12, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.5,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: labelRef.current,
-            start: "top 90%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
+      revealLabel(labelRef.current, labelRef.current);
 
       // Pills stagger in, then launch float loop once reveal finishes
       const REVEAL_STAGGER = 0.09;
@@ -165,14 +152,12 @@ export function SkillsSection() {
 
       gsap.fromTo(
         ".skill-pill",
-        { y: 20, opacity: 0, scale: 0.93 },
+        { ...motionSystem.listItem.from, scale: 0.93 },
         {
-          y: 0,
-          opacity: 1,
+          ...motionSystem.listItem.to,
           scale: 1,
           stagger: { each: REVEAL_STAGGER, from: "start" },
           duration: REVEAL_DURATION,
-          ease: "power3.out",
           scrollTrigger: {
             trigger: sectionRef.current,
             start: "top 80%",

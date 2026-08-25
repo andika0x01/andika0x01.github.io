@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useScrambleHover } from "../hooks/useScrambleHover";
+import { attachProximity, motionSystem, revealLabel, revealWordsWithTrail } from "../lib/motionSystem";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -49,7 +50,7 @@ function WordSplit({ text, highlights = [] }: { text: string; highlights?: strin
         return (
           <span
             key={i}
-            className="word-clip-container"
+            className="word-clip-container motion-word-clip"
             style={{
               display: "inline-block",
               overflow: "hidden",
@@ -59,7 +60,7 @@ function WordSplit({ text, highlights = [] }: { text: string; highlights?: strin
             }}
           >
             <span
-              className={`word-inner proximity-word ${isHighlight ? "keyword-chip" : ""}`}
+              className={`word-inner motion-word motion-proximity-word ${isHighlight ? "keyword-chip" : ""}`}
               data-cursor-hover={isHighlight ? "true" : undefined}
               style={{
                 display: "inline-block",
@@ -96,48 +97,18 @@ export function AboutSection() {
       }
 
       // Section label
-      gsap.fromTo(
-        labelRef.current,
-        { y: 12, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.5,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: labelRef.current,
-            start: "top 90%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
+      revealLabel(labelRef.current, labelRef.current);
 
       // Per-paragraph: word-by-word clip reveal from below
       paraRefs.current.forEach((el) => {
         if (!el) return;
         const wordInners = el.querySelectorAll(".word-inner");
         const containers = el.querySelectorAll<HTMLElement>(".word-clip-container");
-        gsap.fromTo(
-          wordInners,
-          { yPercent: 110 },
-          {
-            yPercent: 0,
-            stagger: { each: 0.022, from: "start" },
-            duration: 0.55,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: el,
-              start: "top 87%",
-              toggleActions: "play none none none",
-            },
-            onComplete: () => {
-              // Release overflow clipping after reveal so hover translations never get clipped
-              containers.forEach((c) => {
-                c.style.overflow = "visible";
-              });
-            },
-          }
-        );
+        revealWordsWithTrail(wordInners, containers, {
+          trigger: el,
+          start: "top 87%",
+          toggleActions: "play none none none",
+        });
       });
     }, sectionRef);
 
@@ -147,59 +118,11 @@ export function AboutSection() {
       return () => ctx.revert();
     }
 
-    const words = section.querySelectorAll<HTMLElement>(".proximity-word");
-    let mouseX = -9999;
-    let mouseY = -9999;
-    let animId: number;
-
-    const onMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    };
-
-    const onMouseLeave = () => {
-      mouseX = -9999;
-      mouseY = -9999;
-    };
-
-    const updateProximity = () => {
-      if (mouseX !== -9999) {
-        const radius = 160;
-        words.forEach((word) => {
-          const rect = word.getBoundingClientRect();
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          const dist = Math.hypot(mouseX - cx, mouseY - cy);
-
-          if (dist < radius) {
-            const p = Math.pow(1 - dist / radius, 1.8);
-            word.style.letterSpacing = `${(p * 0.045).toFixed(4)}em`;
-            word.style.transform = `translateY(${(-p * 5.5).toFixed(2)}px) scale(${(1 + p * 0.04).toFixed(3)})`;
-          } else if (word.style.letterSpacing !== "") {
-            word.style.letterSpacing = "";
-            word.style.transform = "";
-          }
-        });
-      } else {
-        words.forEach((word) => {
-          if (word.style.letterSpacing !== "") {
-            word.style.letterSpacing = "";
-            word.style.transform = "";
-          }
-        });
-      }
-      animId = requestAnimationFrame(updateProximity);
-    };
-
-    section.addEventListener("mousemove", onMouseMove);
-    section.addEventListener("mouseleave", onMouseLeave);
-    animId = requestAnimationFrame(updateProximity);
+    const detachProximity = attachProximity(section);
 
     return () => {
       ctx.revert();
-      section.removeEventListener("mousemove", onMouseMove);
-      section.removeEventListener("mouseleave", onMouseLeave);
-      cancelAnimationFrame(animId);
+      detachProximity();
     };
   }, []);
 
@@ -210,21 +133,9 @@ export function AboutSection() {
     paraRefs.current.forEach((el, i) => {
       if (!el) return;
       if (i === index) {
-        gsap.to(el, {
-          opacity: 1,
-          x: 6,
-          duration: 0.28,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
+        gsap.to(el, motionSystem.hoverFocus.active);
       } else {
-        gsap.to(el, {
-          opacity: 0.32,
-          x: 0,
-          duration: 0.28,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
+        gsap.to(el, motionSystem.hoverFocus.inactive);
       }
     });
   };
@@ -235,13 +146,7 @@ export function AboutSection() {
     paraRefs.current.forEach((el, i) => {
       if (!el) return;
       const isMuted = PARAGRAPHS[i].muted;
-      gsap.to(el, {
-        opacity: isMuted ? 0.65 : 1,
-        x: 0,
-        duration: 0.35,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
+      gsap.to(el, { ...motionSystem.hoverFocus.reset, opacity: isMuted ? 0.65 : 1 });
     });
   };
 

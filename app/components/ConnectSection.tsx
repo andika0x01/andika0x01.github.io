@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useMagneticHover } from "../hooks/useMagneticHover";
 import { useScrambleHover } from "../hooks/useScrambleHover";
+import { motionSystem, revealLabel, revealList } from "../lib/motionSystem";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -247,53 +248,34 @@ export function ConnectSection() {
         return;
       }
 
-      gsap.fromTo(
-        labelRef.current,
-        { y: 12, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.5,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: labelRef.current,
-            start: "top 90%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
+      revealLabel(labelRef.current, labelRef.current);
 
-      gsap.fromTo(
-        ".connect-link",
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          stagger: { each: 0.12 },
-          duration: 0.7,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 82%",
-            toggleActions: "play none none none",
-          },
-        }
-      );
+      revealList(".connect-link", sectionRef.current);
 
       gsap.fromTo(
         footerRef.current,
-        { opacity: 0 },
+        { opacity: 0, y: 18 },
         {
           opacity: 1,
-          duration: 0.6,
-          delay: 0.4,
+          y: 0,
+          duration: 0.72,
+          ease: "power3.out",
           scrollTrigger: {
             trigger: footerRef.current,
-            start: "top 95%",
+            start: "top 92%",
             toggleActions: "play none none none",
           },
         }
       );
+
+      gsap.to(".footer-breath", {
+        letterSpacing: "-0.045em",
+        opacity: 0.82,
+        duration: 2.8,
+        ease: "sine.inOut",
+        repeat: -1,
+        yoyo: true,
+      });
     }, sectionRef);
 
     return () => ctx.revert();
@@ -366,8 +348,10 @@ export function ConnectSection() {
         >
           <div>
             <p
+              className="footer-breath"
               style={{
                 margin: 0,
+                willChange: "letter-spacing, opacity",
                 fontSize: "clamp(40px, 10vw, 150px)",
                 fontWeight: 900,
                 letterSpacing: "-0.065em",

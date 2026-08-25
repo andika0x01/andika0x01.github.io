@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useScrambleHover } from "../hooks/useScrambleHover";
+import { applyHoverFocus, attachProximity, resetHoverFocus, revealEditorialBlock, revealLabel } from "../lib/motionSystem";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,10 +27,10 @@ function WordReveal({ text }: { text: string }) {
       {text.split(" ").map((word, i) => (
         <span
           key={i}
-          className="credential-word-clip"
+          className="credential-word-clip motion-word-clip"
           style={{ display: "inline-block", overflow: "hidden", verticalAlign: "bottom", paddingBottom: "0.12em", marginBottom: "-0.12em" }}
         >
-          <span className="credential-word" style={{ display: "inline-block", willChange: "transform" }}>
+          <span className="credential-word motion-word motion-proximity-word" style={{ display: "inline-block", willChange: "transform, letter-spacing, background-color" }}>
             {word}{i < text.split(" ").length - 1 ? "\u00A0" : ""}
           </span>
         </span>
@@ -56,13 +57,7 @@ export function ExperienceSection() {
         return;
       }
 
-      gsap.fromTo(labelRef.current, { y: 12, opacity: 0 }, {
-        y: 0,
-        opacity: 1,
-        duration: 0.5,
-        ease: "power2.out",
-        scrollTrigger: { trigger: labelRef.current, start: "top 90%", toggleActions: "play none none none" },
-      });
+      revealLabel(labelRef.current, labelRef.current);
 
       sectionRef.current?.querySelectorAll<HTMLElement>(".credential-card").forEach((card) => {
         const line = card.querySelector(".credential-line");
@@ -72,46 +67,33 @@ export function ExperienceSection() {
         const clips = card.querySelectorAll<HTMLElement>(".credential-word-clip");
         const link = card.querySelector(".credential-link");
 
-        const tl = gsap.timeline({
-          scrollTrigger: { trigger: card, start: "top 82%", toggleActions: "play none none none" },
-        });
-
-        tl.fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: 0.72, ease: "power2.inOut", transformOrigin: "left center" })
-          .fromTo(meta, { y: 14, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.04, duration: 0.45, ease: "power2.out" }, "-=0.42")
-          .fromTo(title, { y: 34, opacity: 0, letterSpacing: "-0.09em" }, { y: 0, opacity: 1, letterSpacing: "-0.06em", duration: 0.7, ease: "power4.out" }, "-=0.22")
-          .fromTo(words, { yPercent: 115 }, {
-            yPercent: 0,
-            stagger: { each: 0.018, from: "start" },
-            duration: 0.5,
-            ease: "power3.out",
-            onComplete: () => clips.forEach((clip) => (clip.style.overflow = "visible")),
-          }, "-=0.25");
-
-        if (link) tl.fromTo(link, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "power2.out" }, "-=0.18");
+        revealEditorialBlock({ trigger: card, line, meta, title, words, clips, link });
       });
     }, sectionRef);
 
-    return () => ctx.revert();
+    const section = sectionRef.current;
+    if (!section || reduced || window.matchMedia("(hover: none)").matches) {
+      return () => ctx.revert();
+    }
+
+    const detachProximity = attachProximity(section);
+
+    return () => {
+      ctx.revert();
+      detachProximity();
+    };
   }, []);
 
   const handleCardEnter = (index: number) => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const cards = sectionRef.current?.querySelectorAll<HTMLElement>(".credential-card");
-    cards?.forEach((card, i) => {
-      const title = card.querySelector(".credential-title");
-      gsap.to(card, { opacity: i === index ? 1 : 0.34, x: i === index ? 8 : 0, duration: 0.26, ease: "power2.out", overwrite: "auto" });
-      if (title && i === index) gsap.to(title, { skewX: -2, duration: 0.22, ease: "power2.out", overwrite: "auto" });
-    });
+    if (cards) applyHoverFocus(cards, index);
   };
 
   const handleCardLeave = () => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const cards = sectionRef.current?.querySelectorAll<HTMLElement>(".credential-card");
-    cards?.forEach((card) => {
-      const title = card.querySelector(".credential-title");
-      gsap.to(card, { opacity: 1, x: 0, duration: 0.34, ease: "power2.out", overwrite: "auto" });
-      if (title) gsap.to(title, { skewX: 0, duration: 0.45, ease: "elastic.out(1, 0.35)", overwrite: "auto" });
-    });
+    if (cards) resetHoverFocus(cards);
   };
 
   return (
@@ -154,11 +136,7 @@ export function ExperienceSection() {
               <p style={{ margin: 0, fontSize: "clamp(17px, 2vw, 27px)", lineHeight: 1.56, color: "var(--ink)" }}>
                 <WordReveal text={item.body} />
               </p>
-              {item.href && (
-                <a className="credential-link" href={item.href} target="_blank" rel="noopener noreferrer" style={{ opacity: 0, display: "inline-block", marginTop: "1.25rem", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "clamp(11px, 1vw, 13px)", color: "var(--ink)", textDecoration: "none", borderBottom: "1px solid rgba(10,10,10,0.35)", paddingBottom: 2 }}>
-                  Read the article ↗
-                </a>
-              )}
+
             </div>
           </article>
         ))}

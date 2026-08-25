@@ -113,6 +113,7 @@ export function HeroSection() {
           scrub: 1.4,
         },
       });
+
     }, sectionRef);
 
     return () => ctx.revert();
@@ -247,10 +248,13 @@ export function HeroSection() {
             fontWeight: 300,
             color: "var(--muted)",
             lineHeight: 1.48,
-            maxWidth: 560,
+            maxWidth: 620,
           }}
         >
-          I build software to understand systems. I study security to understand how systems fail.
+          <span style={{ display: "block" }}>I build software</span>
+          <span style={{ display: "block" }}>to understand systems.</span>
+          <span style={{ display: "block", marginTop: "0.35em", color: "var(--ink)" }}>I study security</span>
+          <span style={{ display: "block" }}>to understand how systems fail.</span>
         </p>
       </div>
     </section>
