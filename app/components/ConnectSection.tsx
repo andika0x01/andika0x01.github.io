@@ -233,7 +233,7 @@ function ConnectLink({ label, href, display }: { label: string; href: string; di
 export function ConnectSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const { ref: labelRef, onMouseEnter: onLabelHover } = useScrambleHover<HTMLSpanElement>("Connect");
-  const footerRef = useRef<HTMLParagraphElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -345,20 +345,69 @@ export function ConnectSection() {
         ))}
       </div>
 
-      {/* Footer note */}
-      <p
+      {/* Footer mark */}
+      <div
         ref={footerRef}
         style={{
-          marginTop: "clamp(4rem, 8vw, 8rem)",
-          fontFamily: "'Geist Mono', ui-monospace, monospace",
-          fontSize: "11px",
-          color: "var(--muted)",
-          letterSpacing: "0.06em",
+          marginTop: "clamp(5rem, 10vw, 10rem)",
           opacity: 0,
         }}
       >
-        andika0x01.github.io · {new Date().getFullYear()}
-      </p>
+        <div aria-hidden="true" style={{ height: 1, background: "rgba(10,10,10,0.1)", marginBottom: "clamp(1.25rem, 3vw, 2.5rem)" }} />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) auto",
+            gap: "clamp(1.5rem, 5vw, 5rem)",
+            alignItems: "end",
+          }}
+          className="footer-grid"
+        >
+          <div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "clamp(40px, 10vw, 150px)",
+                fontWeight: 900,
+                letterSpacing: "-0.065em",
+                lineHeight: 0.88,
+                color: "var(--ink)",
+              }}
+            >
+              The archive is still breathing.
+            </p>
+            <p
+              style={{
+                margin: "clamp(0.9rem, 2vw, 1.4rem) 0 0",
+                fontSize: "clamp(15px, 1.5vw, 20px)",
+                lineHeight: 1.5,
+                color: "var(--muted)",
+                maxWidth: 560,
+              }}
+            >
+              Some systems are built. Some are studied until their seams begin to show.
+            </p>
+          </div>
+
+          <div
+            style={{
+              fontFamily: "'Geist Mono', ui-monospace, monospace",
+              fontSize: "11px",
+              color: "var(--muted)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              lineHeight: 1.8,
+              textAlign: "right",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <div>andika0x01</div>
+            <div>portfolio / {new Date().getFullYear()}</div>
+            <div>Bandar Lampung</div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

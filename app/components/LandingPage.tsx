@@ -2,6 +2,8 @@ import { CustomCursor } from "./CustomCursor";
 import { HeroSection } from "./HeroSection";
 import { AboutSection } from "./AboutSection";
 import { SkillsSection } from "./SkillsSection";
+import { ExperienceSection } from "./ExperienceSection";
+import { ActivitiesSection } from "./ActivitiesSection";
 import { ProjectsSection } from "./ProjectsSection";
 import { ConnectSection } from "./ConnectSection";
 import { useSmoothScroll } from "../hooks/useSmoothScroll";
@@ -27,6 +29,8 @@ export function LandingPage({ projects }: LandingPageProps) {
       <CustomCursor />
       <HeroSection />
       <AboutSection />
+      <ExperienceSection />
+      <ActivitiesSection />
       <SkillsSection />
       <ProjectsSection projects={projects} />
       <ConnectSection />

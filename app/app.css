@@ -71,6 +71,31 @@ body {
   }
 }
 
+/* ── Hero / credentials responsive grids ───────── */
+@media (max-width: 760px) {
+  .hero-meta-grid,
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .footer-grid > div:last-child {
+    text-align: left !important;
+  }
+
+  .credential-body,
+  .activity-body {
+    margin-left: 0 !important;
+  }
+
+  .hero-meta-grid {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin-top: clamp(3rem, 12vw, 5rem);
+  }
+}
+
 /* ── Project rows ──────────────────────────────── */
 .project-row {
   position: relative;

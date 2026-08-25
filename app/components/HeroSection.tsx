@@ -4,81 +4,113 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Uppercase alphabet for the scramble effect
-const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-// Flattened char sequence matching DOM order: ANDIKA (0-5) + DINATA (6-11)
-const ALL_CHARS = "ANDIKADINATA";
+const HERO_WORDS = ["Role", "Security", "Researcher", "Software", "Engineer"];
+
+function HoverWord({ children, muted = false }: { children: React.ReactNode; muted?: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  const onEnter = () => {
+    if (!ref.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.to(ref.current, {
+      y: -5,
+      scale: 1.035,
+      letterSpacing: muted ? "0.02em" : "-0.045em",
+      color: "var(--ink)",
+      duration: 0.24,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+  };
+
+  const onLeave = () => {
+    if (!ref.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.to(ref.current, {
+      y: 0,
+      scale: 1,
+      letterSpacing: muted ? "0.01em" : "-0.055em",
+      color: muted ? "var(--muted)" : "var(--ink)",
+      duration: 0.55,
+      ease: "elastic.out(1, 0.35)",
+      overwrite: "auto",
+    });
+  };
+
+  return (
+    <span
+      ref={ref}
+      className="hero-hover-word"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      style={{
+        display: "inline-block",
+        willChange: "transform, letter-spacing, color",
+        cursor: "default",
+        color: muted ? "var(--muted)" : "var(--ink)",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
 
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const nameBlockRef = useRef<HTMLDivElement>(null);
-  const taglineRef = useRef<HTMLParagraphElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const metaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const ctx = gsap.context(() => {
-      // ── Reduced-motion fallback: show everything immediately ──────────
       if (reduced) {
-        gsap.set(".char", { opacity: 1 });
-        gsap.set(taglineRef.current, {
-          opacity: 1,
-          y: 0,
-        });
+        gsap.set([".hero-line", ".hero-meta", ".hero-note", ".hero-mark"], { opacity: 1, y: 0 });
         return;
       }
 
-      // ── Scramble effect on name chars ─────────────────────────────────
-      const charEls = sectionRef.current?.querySelectorAll(".char");
-      const STAGGER = 0.08;
-      const SCRAMBLE = 0.65;
-      const totalTime = (ALL_CHARS.length - 1) * STAGGER + SCRAMBLE;
+      gsap.fromTo(
+        ".hero-line",
+        { yPercent: 110, opacity: 0 },
+        {
+          yPercent: 0,
+          opacity: 1,
+          stagger: 0.105,
+          duration: 0.86,
+          ease: "power4.out",
+        }
+      );
 
-      charEls?.forEach((el, i) => {
-        const finalChar = ALL_CHARS[i];
-        const delay = i * STAGGER;
+      gsap.fromTo(
+        [".hero-meta", ".hero-note", ".hero-mark"],
+        { y: 18, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          stagger: 0.08,
+          duration: 0.62,
+          ease: "power3.out",
+          delay: 0.52,
+        }
+      );
 
-        gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.03, delay, ease: "none" });
-
-        gsap.to(
-          {},
-          {
-            duration: SCRAMBLE,
-            delay,
-            onUpdate() {
-              const p = this.progress();
-              (el as HTMLElement).textContent = p < 0.78 ? ALPHA[Math.floor(Math.random() * ALPHA.length)] : finalChar;
-            },
-            onComplete: () => {
-              (el as HTMLElement).textContent = finalChar;
-            },
-          }
-        );
-      });
-
-      // ── Tagline — slides in after scramble finishes ───────────────────
-      gsap.fromTo(taglineRef.current, { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, ease: "power3.out", delay: totalTime });
-
-      // ── Subtle breathing on name block after reveal ───────────────────
-      gsap.to(nameBlockRef.current, {
-        scaleX: 1.0035,
-        duration: 3.8,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-        delay: totalTime + 0.5,
-        transformOrigin: "left center",
-      });
-
-      // ── Scroll parallax: name block drifts up 1.8× scroll speed ──────
-      gsap.to(nameBlockRef.current, {
-        y: "-18vh",
+      gsap.to(boardRef.current, {
+        y: "-12vh",
         ease: "none",
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
           end: "bottom top",
-          scrub: 1.5,
+          scrub: 1.4,
+        },
+      });
+
+      gsap.to(metaRef.current, {
+        y: "6vh",
+        ease: "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1.4,
         },
       });
     }, sectionRef);
@@ -86,308 +118,141 @@ export function HeroSection() {
     return () => ctx.revert();
   }, []);
 
-  /** Kinetic letter scatter on click / active hover */
-  const handleCharScatter = (e: React.MouseEvent<HTMLSpanElement> | React.PointerEvent<HTMLSpanElement>) => {
-    const el = e.currentTarget;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const dx = gsap.utils.random(-24, 24);
-    const dy = gsap.utils.random(-28, 28);
-    const rot = gsap.utils.random(-12, 12);
-
-    gsap.to(el, {
-      x: dx,
-      y: dy,
-      rotation: rot,
-      duration: 0.1,
-      ease: "power2.out",
-      overwrite: "auto",
-      onComplete: () => {
-        gsap.to(el, {
-          x: 0,
-          y: 0,
-          rotation: 0,
-          duration: 0.85,
-          ease: "elastic.out(1.2, 0.35)",
-        });
-      },
-    });
-  };
-
-  /** Chiasmus Tagline word focus & mirror hover */
-  const handleChiasmusEnter = (type: "code" | "think") => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    // Elevate mirror words
-    const mirrorEls = sectionRef.current?.querySelectorAll<HTMLElement>(`.tagline-${type}`);
-    mirrorEls?.forEach((el) => {
-      gsap.to(el, {
-        color: "var(--ink)",
-        y: -4,
-        scale: 1.08,
-        fontWeight: type === "code" ? 700 : 600,
-        letterSpacing: type === "think" ? "0.04em" : "0.01em",
-        duration: 0.22,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
-    });
-
-    // Dim non-matching words for high-contrast focus depth
-    const otherEls = sectionRef.current?.querySelectorAll<HTMLElement>(`.tagline-word:not(.tagline-${type})`);
-    otherEls?.forEach((el) => {
-      gsap.to(el, {
-        opacity: 0.28,
-        duration: 0.22,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
-    });
-  };
-
-  const handleChiasmusLeave = () => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const allWords = sectionRef.current?.querySelectorAll<HTMLElement>(".tagline-word");
-    allWords?.forEach((el) => {
-      gsap.to(el, {
-        color: "var(--muted)",
-        y: 0,
-        scale: 1,
-        opacity: 1,
-        fontWeight: 300,
-        letterSpacing: "normal",
-        duration: 0.35,
-        ease: "power2.out",
-        overwrite: "auto",
-      });
-    });
-  };
-
-  /** General word hover for surrounding words */
-  const handleSingleWordEnter = (e: React.MouseEvent<HTMLSpanElement>) => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const target = e.currentTarget;
-
-    gsap.to(target, {
-      color: "var(--ink)",
-      y: -3,
-      fontWeight: 500,
-      scale: 1.05,
-      duration: 0.2,
-      ease: "power2.out",
-      overwrite: "auto",
-    });
-
-    const allWords = sectionRef.current?.querySelectorAll<HTMLElement>(".tagline-word");
-    allWords?.forEach((el) => {
-      if (el !== target) {
-        gsap.to(el, {
-          opacity: 0.45,
-          duration: 0.2,
-          ease: "power2.out",
-          overwrite: "auto",
-        });
-      }
-    });
-  };
-
-  const handleSingleWordLeave = () => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const allWords = sectionRef.current?.querySelectorAll<HTMLElement>(".tagline-word");
-    allWords?.forEach((el) => {
-      gsap.to(el, {
-        color: "var(--muted)",
-        y: 0,
-        scale: 1,
-        opacity: 1,
-        fontWeight: 300,
-        duration: 0.35,
-        ease: "elastic.out(1, 0.4)",
-        overwrite: "auto",
-      });
-    });
-  };
-
-  /** Render a word as individual scramble-able char spans */
-  const renderWord = (word: string, className: string, ariaLabel: string) => (
-    <div className={className} aria-label={ariaLabel} style={{ lineHeight: 0.88 }}>
-      {word.split("").map((char, i) => (
-        <span
-          key={i}
-          className="char"
-          onPointerDown={handleCharScatter}
-          onMouseEnter={(e) => {
-            if (e.buttons > 0) handleCharScatter(e);
-          }}
-          style={{
-            display: "inline-block",
-            fontSize: "clamp(46px, 16.5vw, 340px)",
-            fontWeight: 900,
-            letterSpacing: "-0.04em",
-            lineHeight: 0.88,
-            opacity: 0,
-            cursor: "pointer",
-            userSelect: "none",
-            willChange: "transform",
-          }}
-        >
-          {char}
-        </span>
-      ))}
-    </div>
-  );
-
   return (
     <section
       ref={sectionRef}
       style={{
         position: "relative",
         minHeight: "100svh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
+        display: "grid",
+        alignItems: "center",
         padding: "clamp(20px, 5.5vw, 120px)",
         paddingTop: "clamp(64px, 10vw, 140px)",
         paddingBottom: "clamp(84px, 11vw, 120px)",
         overflow: "hidden",
-        boxSizing: "border-box",
       }}
     >
-      {/* ── Name block (receives scroll parallax & kinetic velocity skew) ── */}
-      <div ref={nameBlockRef} data-velocity-skew style={{ position: "relative", zIndex: 1, willChange: "transform" }}>
-        {renderWord("ANDIKA", "firstname", "ANDIKA")}
-        {renderWord("DINATA", "lastname", "DINATA")}
-      </div>
-
-      {/* ── Tagline (Chiasmus Mirror Resonance & Word Optical Focus) ─────── */}
-      <p
-        ref={taglineRef}
+      <div
+        className="hero-mark"
+        aria-hidden="true"
         style={{
-          marginTop: "clamp(1.25rem, 3vw, 3.25rem)",
-          fontSize: "clamp(16px, 3.8vw, 28px)",
-          fontWeight: 300,
+          position: "absolute",
+          top: "clamp(20px, 5vw, 72px)",
+          right: "clamp(20px, 5.5vw, 120px)",
+          fontFamily: "'Geist Mono', ui-monospace, monospace",
+          fontSize: "11px",
           color: "var(--muted)",
-          lineHeight: 1.5,
-          maxWidth: "min(540px, 100%)",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
           opacity: 0,
-          position: "relative",
-          zIndex: 1,
         }}
       >
-        <span
-          className="tagline-word"
-          onMouseEnter={handleSingleWordEnter}
-          onMouseLeave={handleSingleWordLeave}
-          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
-        >
-          I
-        </span>
-        <span
-          className="tagline-word"
-          onMouseEnter={handleSingleWordEnter}
-          onMouseLeave={handleSingleWordLeave}
-          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
-        >
-          write
-        </span>
-        <span
-          className="tagline-word tagline-code"
-          onMouseEnter={() => handleChiasmusEnter("code")}
-          onMouseLeave={handleChiasmusLeave}
+        andika0x01 / archive
+      </div>
+
+      <div ref={boardRef} data-velocity-skew style={{ position: "relative", zIndex: 1, willChange: "transform" }}>
+        <div style={{ overflow: "hidden" }}>
+          <div
+            className="hero-line"
+            style={{
+              fontFamily: "'Geist Mono', ui-monospace, monospace",
+              fontSize: "clamp(14px, 2.4vw, 34px)",
+              fontWeight: 500,
+              letterSpacing: "0.01em",
+              lineHeight: 1.1,
+              opacity: 0,
+            }}
+          >
+            <HoverWord muted>{HERO_WORDS[0]}</HoverWord>
+          </div>
+        </div>
+
+        <div style={{ overflow: "hidden" }}>
+          <h1
+            className="hero-line"
+            style={{
+              margin: "clamp(0.3rem, 1vw, 0.8rem) 0 0",
+              fontSize: "clamp(54px, 14vw, 240px)",
+              fontWeight: 900,
+              letterSpacing: "-0.055em",
+              lineHeight: 0.86,
+              opacity: 0,
+            }}
+          >
+            <HoverWord>{HERO_WORDS[1]}</HoverWord>
+          </h1>
+        </div>
+
+        <div style={{ overflow: "hidden" }}>
+          <h1
+            className="hero-line"
+            style={{
+              margin: 0,
+              fontSize: "clamp(54px, 14vw, 240px)",
+              fontWeight: 900,
+              letterSpacing: "-0.055em",
+              lineHeight: 0.86,
+              opacity: 0,
+            }}
+          >
+            <HoverWord>{HERO_WORDS[2]}</HoverWord>
+          </h1>
+        </div>
+
+        <div style={{ overflow: "hidden" }}>
+          <p
+            className="hero-line"
+            style={{
+              margin: "clamp(0.8rem, 2vw, 1.8rem) 0 0",
+              fontSize: "clamp(26px, 6vw, 98px)",
+              fontWeight: 800,
+              letterSpacing: "-0.055em",
+              lineHeight: 0.95,
+              opacity: 0,
+            }}
+          >
+            <HoverWord muted>Software Engineer</HoverWord>
+          </p>
+        </div>
+      </div>
+
+      <div
+        ref={metaRef}
+        style={{
+          position: "absolute",
+          left: "clamp(24px, 6vw, 120px)",
+          right: "clamp(24px, 6vw, 120px)",
+          bottom: "clamp(28px, 6vw, 86px)",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(240px, 520px)",
+          gap: "clamp(1.5rem, 5vw, 5rem)",
+          alignItems: "end",
+          zIndex: 2,
+          willChange: "transform",
+        }}
+        className="hero-meta-grid"
+      >
+        <div className="hero-meta" style={{ opacity: 0, fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "clamp(11px, 1vw, 13px)", color: "var(--muted)", letterSpacing: "0.08em", textTransform: "uppercase", lineHeight: 1.8 }}>
+          <div>Andika Dinata</div>
+          <div>CS student · ITERA</div>
+          <div>Bandar Lampung, Indonesia</div>
+        </div>
+
+        <p
+          className="hero-note"
           style={{
-            display: "inline-block",
-            cursor: "default",
-            marginRight: "0.28em",
-            willChange: "transform, opacity, color",
-            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
+            margin: 0,
+            opacity: 0,
+            fontSize: "clamp(16px, 2.1vw, 28px)",
+            fontWeight: 300,
+            color: "var(--muted)",
+            lineHeight: 1.48,
+            maxWidth: 560,
           }}
         >
-          code
-        </span>
-        <span
-          className="tagline-word"
-          onMouseEnter={handleSingleWordEnter}
-          onMouseLeave={handleSingleWordLeave}
-          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
-        >
-          to
-        </span>
-        <span
-          className="tagline-word tagline-think"
-          onMouseEnter={() => handleChiasmusEnter("think")}
-          onMouseLeave={handleChiasmusLeave}
-          style={{
-            display: "inline-block",
-            cursor: "default",
-            willChange: "transform, opacity, color",
-            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
-          }}
-        >
-          think.
-        </span>
-        <br />
-        <span
-          className="tagline-word"
-          onMouseEnter={handleSingleWordEnter}
-          onMouseLeave={handleSingleWordLeave}
-          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
-        >
-          I
-        </span>
-        <span
-          className="tagline-word tagline-think"
-          onMouseEnter={() => handleChiasmusEnter("think")}
-          onMouseLeave={handleChiasmusLeave}
-          style={{
-            display: "inline-block",
-            cursor: "default",
-            marginRight: "0.28em",
-            willChange: "transform, opacity, color",
-            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
-          }}
-        >
-          think
-        </span>
-        <span
-          className="tagline-word"
-          onMouseEnter={handleSingleWordEnter}
-          onMouseLeave={handleSingleWordLeave}
-          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
-        >
-          to
-        </span>
-        <span
-          className="tagline-word"
-          onMouseEnter={handleSingleWordEnter}
-          onMouseLeave={handleSingleWordLeave}
-          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
-        >
-          write
-        </span>
-        <span
-          className="tagline-word"
-          onMouseEnter={handleSingleWordEnter}
-          onMouseLeave={handleSingleWordLeave}
-          style={{ display: "inline-block", cursor: "default", marginRight: "0.28em", willChange: "transform, opacity, color" }}
-        >
-          better
-        </span>
-        <span
-          className="tagline-word tagline-code"
-          onMouseEnter={() => handleChiasmusEnter("code")}
-          onMouseLeave={handleChiasmusLeave}
-          style={{
-            display: "inline-block",
-            cursor: "default",
-            willChange: "transform, opacity, color",
-            borderBottom: "1.5px solid rgba(10, 10, 10, 0.12)",
-          }}
-        >
-          code.
-        </span>
-      </p>
+          I build software to understand systems. I study security to understand how systems fail.
+        </p>
+      </div>
     </section>
   );
 }
