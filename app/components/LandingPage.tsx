@@ -1,4 +1,3 @@
-import { CustomCursor } from "./CustomCursor";
 import { HeroSection } from "./HeroSection";
 import { AboutSection } from "./AboutSection";
 import { SkillsSection } from "./SkillsSection";
@@ -26,7 +25,6 @@ export function LandingPage({ projects }: LandingPageProps) {
         position: "relative",
       }}
     >
-      <CustomCursor />
       <HeroSection />
       <AboutSection />
       <ExperienceSection />

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>404 - Page Not Found</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    />
+    <style>
+      :root {
+        --ink: #0a0a0a;
+        --muted: #8c8c8c;
+        --ghost: #f2f2f2;
+      }
+      
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* Hide default cursor on real pointer devices */
+      @media (hover: hover) and (pointer: fine) {
+        body {
+          cursor: none;
+        }
+        
+        a {
+          cursor: none;
+        }
+      }
+      
+      body {
+        font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+        background-color: #ffffff;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(20px, 5.5vw, 120px);
+      }
+      
+      .container {
+        text-align: center;
+        max-width: 600px;
+      }
+      
+      h1 {
+        font-size: clamp(48px, 12vw, 120px);
+        font-weight: 900;
+        letter-spacing: -0.055em;
+        line-height: 1;
+        margin-bottom: clamp(1rem, 3vw, 2rem);
+        color: var(--ink);
+      }
+      
+      p {
+        font-size: clamp(16px, 2.5vw, 24px);
+        font-weight: 300;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-bottom: clamp(2rem, 5vw, 3rem);
+      }
+      
+      a {
+        display: inline-block;
+        font-family: "Geist Mono", ui-monospace, monospace;
+        font-size: clamp(14px, 2vw, 16px);
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink);
+        text-decoration: none;
+        padding: clamp(12px, 2vw, 16px) clamp(24px, 4vw, 32px);
+        border: 1px solid var(--ink);
+        border-radius: 2px;
+        transition: all 0.2s ease;
+      }
+      
+      a:hover {
+        background-color: var(--ink);
+        color: #ffffff;
+      }
+      
+      /* Custom cursor styles */
+      .cursor-ring {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 36px;
+        height: 36px;
+        border: 1px solid rgba(10,10,10,0.7);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9998;
+        opacity: 0;
+        mix-blend-mode: multiply;
+        transition: width 0.25s ease, height 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+      }
+      
+      .cursor-dot {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 6px;
+        height: 6px;
+        background: #0a0a0a;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0;
+      }
+      
+      .cursor-ring.hover {
+        width: 20px;
+        height: 20px;
+        background: rgba(10,10,10,0.08);
+        border-color: transparent;
+      }
+      
+      .shockwave-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9997;
+      }
+      
+      .shockwave {
+        position: fixed;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid rgba(10, 10, 10, 0.4);
+        pointer-events: none;
+        z-index: 9997;
+        animation: shockwave 0.45s ease-out forwards;
+      }
+      
+      @keyframes shockwave {
+        0% {
+          transform: scale(0.2);
+          opacity: 0.6;
+        }
+        100% {
+          transform: scale(2.2);
+          opacity: 0;
+        }
+      }
+    </style>
+    <script>
+      // Custom cursor implementation
+      (function() {
+        // Only on real pointer devices
+        if (window.matchMedia("(hover: none)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        
+        const ring = document.createElement("div");
+        ring.className = "cursor-ring";
+        document.body.appendChild(ring);
+        
+        const dot = document.createElement("div");
+        dot.className = "cursor-dot";
+        document.body.appendChild(dot);
+        
+        const shockwaveContainer = document.createElement("div");
+        shockwaveContainer.className = "shockwave-container";
+        document.body.appendChild(shockwaveContainer);
+        
+        // Show cursors
+        ring.style.opacity = "1";
+        dot.style.opacity = "1";
+        
+        let mouseX = 0;
+        let mouseY = 0;
+        let ringX = 0;
+        let ringY = 0;
+        
+        const onMove = (e) => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+          // Dot follows instantly
+          dot.style.transform = `translate(${mouseX - 3}px, ${mouseY - 3}px)`;
+        };
+        
+        // Ring follows with lerp
+        const tick = () => {
+          ringX += (mouseX - ringX) * 0.1;
+          ringY += (mouseY - ringY) * 0.1;
+          ring.style.transform = `translate(${ringX - 18}px, ${ringY - 18}px)`;
+          requestAnimationFrame(tick);
+        };
+        
+        window.addEventListener("mousemove", onMove);
+        requestAnimationFrame(tick);
+        
+        // Hover state on interactive elements
+        const onEnter = () => ring.classList.add("hover");
+        const onLeave = () => ring.classList.remove("hover");
+        
+        const link = document.querySelector("a");
+        if (link) {
+          link.addEventListener("mouseenter", onEnter);
+          link.addEventListener("mouseleave", onLeave);
+        }
+        
+        // Shockwave on click
+        const onPointerDown = (e) => {
+          const shockwave = document.createElement("div");
+          shockwave.className = "shockwave";
+          shockwave.style.left = `${e.clientX - 20}px`;
+          shockwave.style.top = `${e.clientY - 20}px`;
+          shockwaveContainer.appendChild(shockwave);
+          
+          setTimeout(() => shockwave.remove(), 450);
+        };
+        
+        window.addEventListener("pointerdown", onPointerDown);
+      })();
+      
+      // SPA fallback: redirect all 404s to index.html
+      var segmentCount = 0;
+      var l = window.location;
+      l.replace(
+        l.protocol +
+          '//' +
+          l.hostname +
+          (l.port ? ':' + l.port : '') +
+          l.pathname
+            .split('/')
+            .slice(0, 1 + segmentCount)
+            .join('/') +
+          '/?p=' +
+          encodeURIComponent(l.pathname.slice(1))
+      );
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>404</h1>
+      <p>The requested page could not be found.</p>
+      <a href="/">Return Home</a>
+    </div>
+  </body>
+</html>
